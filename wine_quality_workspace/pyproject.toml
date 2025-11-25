@@ -1,0 +1,42 @@
+[project]
+name = "wine-quality-workspace"
+version = "0.1.0"
+description = "Data science workspace for Kaggle wine-quality dataset."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Mark Basov" }]
+
+dependencies = [
+    "pandas==2.2.3",
+    "python-dotenv==1.0.1",
+    "kaggle==1.6.17",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+lint.select = ["E", "F", "W", "I", "UP", "B"]
+lint.ignore = [
+    "E501",  # handled by formatter
+]
+
+[tool.ruff.format]
+preview = true
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "mypy==1.13.0",
+    "pre-commit==4.0.1",
+    "ruff==0.7.1",
+]
+
