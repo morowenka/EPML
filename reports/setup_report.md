@@ -49,11 +49,11 @@
 
 ## 7. Скриншоты
 
-Скриншоты помещайте в `reports/images/`. Рекомендуемые имена:
+Ниже приведены фактические скриншоты настройки, хранящиеся в `data/screenshots/`.
 
-- `uv-sync.png` — успешный `uv sync`.
-- `pre-commit.png` — запуск `pre-commit run --all-files`.
-- `kaggle-download.png` — результат `make download-data`.
+![image.png](../data/screenshots/image.png)
 
-Добавьте файлы в указанную директорию, чтобы отчёт был полностью воспроизводим.
+![image copy.png](../data/screenshots/image%20copy.png)
+
+![image copy 2.png](../data/screenshots/image%20copy%202.png)
 
