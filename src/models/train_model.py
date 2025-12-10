@@ -1,0 +1,174 @@
+import json
+import logging
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any, cast
+
+import click
+import joblib
+import mlflow
+import mlflow.sklearn
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import train_test_split
+
+log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(level=logging.INFO, format=log_fmt)
+logger = logging.getLogger(__name__)
+
+
+def _load_params(params_path: Path) -> dict[str, Any]:
+    if not params_path.exists():
+        logger.warning("Params file %s not found. Using defaults.", params_path)
+        return cast(dict[str, Any], {})
+
+    with params_path.open("r", encoding="utf-8") as fp:
+        return cast(dict[str, Any], json.load(fp))
+
+
+def _build_model(model_params: dict[str, Any]) -> LogisticRegression:
+    default_config: dict[str, Any] = {"max_iter": 500, "multi_class": "auto"}
+    user_config = model_params.get("logistic_regression", {})
+    config = {**default_config, **user_config}
+    return LogisticRegression(**config)
+
+
+def _prepare_mlflow(train_params: dict[str, Any]) -> tuple[str, str]:
+    mlflow_params: dict[str, Any] = train_params.get("mlflow", {})
+    tracking_uri = mlflow_params.get("tracking_uri")
+    tracking_dir = Path(mlflow_params.get("tracking_dir", "mlruns"))
+    if tracking_uri:
+        mlflow.set_tracking_uri(tracking_uri)
+    else:
+        tracking_dir.mkdir(parents=True, exist_ok=True)
+        mlflow.set_tracking_uri(tracking_dir.resolve().as_uri())
+
+    experiment_name = mlflow_params.get("experiment_name", "wine-quality")
+    mlflow.set_experiment(experiment_name)
+
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+    run_name_prefix = mlflow_params.get("run_name_prefix")
+    run_name = mlflow_params.get("run_name")
+    if not run_name:
+        run_name = f"{run_name_prefix}-{timestamp}" if run_name_prefix else f"run-{timestamp}"
+
+    return experiment_name, run_name
+
+
+def _log_model_params(model: LogisticRegression) -> dict[str, Any]:
+    prepared: dict[str, Any] = {}
+    for key, value in model.get_params().items():
+        param_key = f"model__{key}"
+        if isinstance(value, str | int | float | bool):
+            prepared[param_key] = value
+        elif value is None:
+            prepared[param_key] = "None"
+        else:
+            prepared[param_key] = str(value)
+    return prepared
+
+
+@click.command()
+@click.argument("processed_dataset_path", type=click.Path(exists=True, path_type=Path))
+@click.argument("model_output_path", type=click.Path(path_type=Path))
+@click.argument("metrics_output_path", type=click.Path(path_type=Path))
+@click.option(
+    "--params-path",
+    default="params.json",
+    show_default=True,
+    type=click.Path(exists=False, path_type=Path),
+    help="Path to the parameters file that controls the training procedure.",
+)
+def main(
+    processed_dataset_path: Path,
+    model_output_path: Path,
+    metrics_output_path: Path,
+    params_path: Path,
+) -> None:
+    """Train a simple classification model and persist it."""
+    params = _load_params(params_path)
+    train_params = params.get("train", {})
+
+    random_state = train_params.get("random_state", 13)
+    test_size = train_params.get("test_size", 0.2)
+    model_params = train_params.get("model", {})
+
+    logger.info("Loading processed dataset from %s", processed_dataset_path)
+    df = pd.read_csv(processed_dataset_path)
+
+    if "target" not in df.columns:
+        msg = "Processed dataset must contain a 'target' column."
+        raise ValueError(msg)
+
+    X = df.drop(columns=["target"])
+    y = df["target"]
+
+    logger.info("Splitting dataset: test_size=%s, random_state=%s", test_size, random_state)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state, stratify=y
+    )
+
+    model = _build_model(model_params)
+    experiment_name, run_name = _prepare_mlflow(train_params)
+
+    logger.info("Training %s", model.__class__.__name__)
+    with mlflow.start_run(run_name=run_name) as run:
+        mlflow.set_tag("stage", "train_model")
+        mlflow.log_params({
+            "random_state": random_state,
+            "test_size": test_size,
+            "n_features": X.shape[1],
+            "n_samples": len(df),
+            "experiment_name": experiment_name,
+        })
+        mlflow.log_params(_log_model_params(model))
+
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        f1_macro = f1_score(y_test, y_pred, average="macro")
+
+        mlflow.log_metrics({"accuracy": accuracy, "f1_macro": f1_macro})
+
+        model_output_path.parent.mkdir(parents=True, exist_ok=True)
+        metrics_output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        logger.info("Persisting trained model to %s", model_output_path)
+        joblib.dump(model, model_output_path)
+
+        mlflow.log_artifact(str(model_output_path))
+        mlflow.sklearn.log_model(model, artifact_path="model")
+
+        metadata = {
+            "timestamp_utc": datetime.now(UTC).isoformat(),
+            "mlflow": {
+                "tracking_uri": mlflow.get_tracking_uri(),
+                "experiment_id": run.info.experiment_id,
+                "run_id": run.info.run_id,
+                "run_name": run.info.run_name,
+            },
+            "model": {
+                "type": model.__class__.__name__,
+                "params": model.get_params(),
+            },
+            "data": {
+                "n_samples": len(df),
+                "n_features": X.shape[1],
+                "test_size": test_size,
+            },
+            "metrics": {
+                "accuracy": accuracy,
+                "f1_macro": f1_macro,
+            },
+        }
+
+        logger.info("Writing metrics and metadata to %s", metrics_output_path)
+        with metrics_output_path.open("w", encoding="utf-8") as fp:
+            json.dump(metadata, fp, indent=2)
+
+        mlflow.log_artifact(str(metrics_output_path))
+
+
+if __name__ == "__main__":
+    main()

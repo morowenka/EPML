@@ -1,0 +1,27 @@
+stages:
+  prepare_data:
+    cmd: uv run python src/data/make_dataset.py data/raw/wine.csv 
+      data/processed/wine_processed.csv --params-path params.json
+    deps:
+    - src/data/make_dataset.py
+    params:
+    - params.json:
+      - data
+    outs:
+    - data/processed/wine_processed.csv
+    - data/raw/wine.csv
+  train_model:
+    cmd: uv run python src/models/train_model.py 
+      data/processed/wine_processed.csv models/model.pkl reports/metrics.json 
+      --params-path params.json
+    deps:
+    - data/processed/wine_processed.csv
+    - src/models/train_model.py
+    params:
+    - params.json:
+      - train
+    outs:
+    - models/model.pkl
+    metrics:
+    - reports/metrics.json:
+        cache: false

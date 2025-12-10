@@ -1,0 +1,59 @@
+schema: '2.0'
+stages:
+  prepare_data:
+    cmd: uv run python src/data/make_dataset.py data/raw/wine.csv 
+      data/processed/wine_processed.csv --params-path params.json
+    deps:
+    - path: src/data/make_dataset.py
+      hash: md5
+      md5: 55755b4603dc2da3a5bc6a084970a98b
+      size: 2355
+    params:
+      params.json:
+        data:
+          feature_scaling: true
+    outs:
+    - path: data/processed/wine_processed.csv
+      hash: md5
+      md5: 2d05757f38b07c8f0a40130aace0c547
+      size: 45989
+    - path: data/raw/wine.csv
+      hash: md5
+      md5: 2925c4a8cd201c79d97d3d283429ef23
+      size: 12261
+  train_model:
+    cmd: uv run python src/models/train_model.py 
+      data/processed/wine_processed.csv models/model.pkl reports/metrics.json 
+      --params-path params.json
+    deps:
+    - path: data/processed/wine_processed.csv
+      hash: md5
+      md5: 2d05757f38b07c8f0a40130aace0c547
+      size: 45989
+    - path: src/models/train_model.py
+      hash: md5
+      md5: d01c3168d039164b89c62641bd8d7145
+      size: 6132
+    params:
+      params.json:
+        train:
+          random_state: 13
+          test_size: 0.25
+          model:
+            logistic_regression:
+              solver: lbfgs
+              max_iter: 500
+              multi_class: auto
+          mlflow:
+            experiment_name: wine-quality
+            tracking_dir: mlruns
+            run_name_prefix: baseline
+    outs:
+    - path: models/model.pkl
+      hash: md5
+      md5: e3e37bb5292f53c2f29fcfc6a58e3793
+      size: 1663
+    - path: reports/metrics.json
+      hash: md5
+      md5: aa8440fc6005f8626540b1fc2b93a481
+      size: 865

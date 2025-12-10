@@ -7,9 +7,12 @@ requires-python = ">=3.11"
 authors = [{ name = "Mark Basov" }]
 
 dependencies = [
+    "click==8.1.7",
     "pandas==2.2.3",
     "python-dotenv==1.0.1",
     "kaggle==1.6.17",
+    "scikit-learn==1.5.2",
+    "mlflow-skinny==2.17.2",
 ]
 
 [tool.uv]
@@ -35,6 +38,7 @@ ignore_missing_imports = true
 
 [dependency-groups]
 dev = [
+    "dvc==3.59.0",
     "mypy==1.13.0",
     "pre-commit==4.0.1",
     "ruff==0.7.1",

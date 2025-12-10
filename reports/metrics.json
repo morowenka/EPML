@@ -1,0 +1,38 @@
+{
+  "timestamp_utc": "2025-12-10T14:39:19.649144+00:00",
+  "mlflow": {
+    "tracking_uri": "file:///Users/m.basov/Desktop/ITMO/EPML/mlruns",
+    "experiment_id": "339627932877923468",
+    "run_id": "cd7923cdf54842ff9a74c8e1e89a1a47",
+    "run_name": "baseline-20251210-143918"
+  },
+  "model": {
+    "type": "LogisticRegression",
+    "params": {
+      "C": 1.0,
+      "class_weight": null,
+      "dual": false,
+      "fit_intercept": true,
+      "intercept_scaling": 1,
+      "l1_ratio": null,
+      "max_iter": 500,
+      "multi_class": "auto",
+      "n_jobs": null,
+      "penalty": "l2",
+      "random_state": null,
+      "solver": "lbfgs",
+      "tol": 0.0001,
+      "verbose": 0,
+      "warm_start": false
+    }
+  },
+  "data": {
+    "n_samples": 178,
+    "n_features": 13,
+    "test_size": 0.25
+  },
+  "metrics": {
+    "accuracy": 1.0,
+    "f1_macro": 1.0
+  }
+}
