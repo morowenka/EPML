@@ -80,5 +80,4 @@
 
 ## Скриншоты
 
-<!-- Вставьте скриншоты здесь -->
-
+![alt text](<../data/screenshots/image copy 6.png>)
