@@ -14,6 +14,9 @@ dependencies = [
     "scikit-learn==1.5.2",
     "mlflow==3.7.0",
     "pyarrow==22.0.0",
+    "omegaconf==2.3.0",
+    "matplotlib==3.9.2",
+    "seaborn==0.13.2",
 ]
 
 [tool.uv]
@@ -30,18 +33,9 @@ lint.ignore = [
 [tool.ruff.format]
 preview = true
 
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-ignore_missing_imports = true
-
 [dependency-groups]
 dev = [
     "dvc==3.59.0",
-    "mypy==1.13.0",
     "pre-commit==4.0.1",
     "ruff==0.7.1",
 ]
-

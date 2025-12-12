@@ -1,0 +1,27 @@
+# Base configuration
+data:
+  feature_scaling: true
+
+train:
+  random_state: 13
+  test_size: 0.2
+  model:
+    type: logistic_regression
+    logistic_regression:
+      max_iter: 500
+      C: 1.0
+      penalty: l2
+      solver: lbfgs
+  mlflow:
+    experiment_name: wine-quality
+    run_name_prefix: baseline
+    model_name: wine-quality-model
+
+visualization:
+  enabled: true
+  output_dir: reports/figures
+
+monitoring:
+  log_file: experiments.log
+  enabled: true
+

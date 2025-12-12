@@ -9,9 +9,14 @@ import joblib
 import mlflow
 import mlflow.sklearn
 import pandas as pd
+from omegaconf import OmegaConf
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+
+from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_fmt)
@@ -23,15 +28,35 @@ def _load_params(params_path: Path) -> dict[str, Any]:
         logger.warning("Params file %s not found. Using defaults.", params_path)
         return {}
 
+    # Try OmegaConf first (YAML), fallback to JSON
+    if params_path.suffix in (".yaml", ".yml"):
+        cfg = OmegaConf.load(params_path)
+        return OmegaConf.to_container(cfg, resolve=True)
+
     with params_path.open("r", encoding="utf-8") as fp:
         return cast(dict[str, Any], json.load(fp))
 
 
-def _build_model(model_params: dict[str, Any]) -> LogisticRegression:
-    default_config: dict[str, Any] = {"max_iter": 500, "multi_class": "auto"}
-    user_config = model_params.get("logistic_regression", {})
-    config = {**default_config, **user_config}
-    return LogisticRegression(**config)
+def _build_model(model_params: dict[str, Any]):
+    model_type = model_params.get("type", "logistic_regression")
+
+    if model_type == "logistic_regression":
+        default_config: dict[str, Any] = {"max_iter": 500}
+        user_config = model_params.get("logistic_regression", {})
+        config = {**default_config, **user_config}
+        return LogisticRegression(**config)
+    elif model_type == "random_forest":
+        default_config: dict[str, Any] = {"n_estimators": 100, "random_state": 13}
+        user_config = model_params.get("random_forest", {})
+        config = {**default_config, **user_config}
+        return RandomForestClassifier(**config)
+    elif model_type == "svm":
+        default_config: dict[str, Any] = {"C": 1.0, "kernel": "rbf", "random_state": 13}
+        user_config = model_params.get("svm", {})
+        config = {**default_config, **user_config}
+        return SVC(**config)
+    else:
+        raise ValueError(f"Unknown model type: {model_type}")
 
 
 def _prepare_mlflow(train_params: dict[str, Any]) -> tuple[str, str]:
@@ -56,7 +81,7 @@ def _prepare_mlflow(train_params: dict[str, Any]) -> tuple[str, str]:
     return experiment_name, run_name
 
 
-def _log_model_params(model: LogisticRegression) -> dict[str, Any]:
+def _log_model_params(model) -> dict[str, Any]:
     prepared: dict[str, Any] = {}
     for key, value in model.get_params().items():
         param_key = f"model__{key}"
@@ -78,16 +103,39 @@ def _log_model_params(model: LogisticRegression) -> dict[str, Any]:
     default="params.json",
     show_default=True,
     type=click.Path(exists=False, path_type=Path),
-    help="Path to the parameters file that controls the training procedure.",
+    help="Path to the parameters file (JSON or YAML) that controls the training procedure.",
+)
+@click.option(
+    "--config-path",
+    default=None,
+    show_default=True,
+    type=click.Path(exists=False, path_type=Path),
+    help="Path to OmegaConf configuration file (YAML). Overrides --params-path if provided.",
 )
 def main(
     processed_dataset_path: Path,
     model_output_path: Path,
     metrics_output_path: Path,
     params_path: Path,
+    config_path: Path | None,
 ) -> None:
     """Train a simple classification model and persist it."""
-    params = _load_params(params_path)
+    # Use OmegaConf config if provided, otherwise fallback to params_path
+    if config_path and config_path.exists():
+        cfg = OmegaConf.load(config_path)
+        params = OmegaConf.to_container(cfg, resolve=True)
+        logger.info("Loaded configuration from %s", config_path)
+    else:
+        params = _load_params(params_path)
+
+    # Setup monitoring
+    monitor = setup_monitoring(config_path)
+    log_pipeline_start(
+        monitor,
+        "train_model",
+        {"model_type": params.get("train", {}).get("model", {}).get("type", "unknown")},
+    )
+
     train_params = params.get("train", {})
 
     random_state = train_params.get("random_state", 13)
@@ -174,6 +222,9 @@ def main(
             json.dump(metadata, fp, indent=2)
 
         mlflow.log_artifact(str(metrics_output_path))
+
+        # Log pipeline completion
+        log_pipeline_end(monitor, "train_model", {"accuracy": accuracy, "f1_macro": f1_macro})
 
 
 if __name__ == "__main__":
