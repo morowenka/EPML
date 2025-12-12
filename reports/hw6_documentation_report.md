@@ -90,7 +90,7 @@ uv run sphinx-build -b html . _build/html
 ✅ **Выполнено:** Создан GitHub Actions workflow в `.github/workflows/docs.yml`.
 
 **Особенности:**
-- Автоматическая сборка документации при пуше в main/master ветку
+- Автоматическая сборка документации при пуше в master ветку
 - Автоматическая публикация на GitHub Pages
 - Триггеры на изменения в `docs/` директории
 - Использование официальных actions для GitHub Pages
@@ -107,7 +107,7 @@ uv run sphinx-build -b html . _build/html
 ✅ **Выполнено:** Настроена автоматическая публикация на GitHub Pages.
 
 **Настройка:**
-- Workflow автоматически публикует документацию при пуше в main ветку
+- Workflow автоматически публикует документацию при пуше в master ветку
 - Документация доступна по адресу: `https://<username>.github.io/<repository>/`
 - Создан файл `.nojekyll` для правильной работы Sphinx на GitHub Pages
 
@@ -116,7 +116,7 @@ uv run sphinx-build -b html . _build/html
 ✅ **Выполнено:** Workflow настроен на автоматическое обновление при изменениях.
 
 **Триггеры:**
-- Push в main/master ветку
+- Push в master ветку
 - Изменения в `docs/` директории
 - Изменения в workflow файле
 - Ручной запуск через GitHub UI
@@ -308,7 +308,7 @@ PYTHONPATH=. uv run python scripts/generate_experiment_report.py \
 
 1. Настроить GitHub Pages в настройках репозитория (Settings > Pages)
 2. Выбрать источник: "GitHub Actions"
-3. При пуше в main ветку документация автоматически соберется и опубликуется
+3. При пуше в master ветку документация автоматически соберется и опубликуется
 
 ## Результаты
 

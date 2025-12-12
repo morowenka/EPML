@@ -97,7 +97,7 @@ uv run sphinx-build -b html . _build/html
 open _build/html/index.html
 ```
 
-Документация также автоматически публикуется на GitHub Pages при пуше в main ветку.
+Документация также автоматически публикуется на GitHub Pages при пуше в master ветку.
 
 ### Онлайн документация
 
