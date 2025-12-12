@@ -209,6 +209,7 @@ EPML/
 - `hw3_experiment_tracking_report.md` - Трекинг экспериментов с MLflow
 - `hw4_pipeline_automation_report.md` - Автоматизация пайплайнов
 - `hw5_clearml_mlops_report.md` - ClearML для MLOps
+- `hw6_documentation_report.md` - Документация и отчеты
 - `experiments/experiment_report.md` - Отчеты об экспериментах
 
 ## 🔧 Конфигурация
