@@ -1,10 +1,52 @@
-Commands
-========
+Команды
+=======
 
-The Makefile contains the central entry points for common tasks related to this project.
+Makefile содержит основные команды для работы с проектом.
 
-Syncing data to S3
-^^^^^^^^^^^^^^^^^^
+Установка и настройка
+---------------------
 
-* `make sync_data_to_s3` will use `aws s3 sync` to recursively sync files in `data/` up to `s3://[OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')/data/`.
-* `make sync_data_from_s3` will use `aws s3 sync` to recursively sync files from `s3://[OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')/data/` to `data/`.
+* ``make uv-sync`` - Установить зависимости проекта через uv
+* ``make format`` - Форматировать Python файлы с помощью ruff
+* ``make lint`` - Запустить проверку кода с помощью ruff
+* ``make typecheck`` - Запустить проверку типов с помощью mypy
+* ``make clean`` - Удалить кэш и временные файлы
+
+Работа с данными
+----------------
+
+* ``make download-data`` - Скачать датасет с Kaggle
+
+Работа с ClearML
+----------------
+
+* ``make clearml-start`` - Запустить ClearML Server
+* ``make clearml-stop`` - Остановить ClearML Server
+* ``make clearml-logs`` - Просмотреть логи ClearML Server
+* ``make clearml-setup`` - Настроить ClearML (запустить сервер и создать проект)
+
+DVC команды
+-----------
+
+* ``dvc repro`` - Воспроизвести весь пайплайн
+* ``dvc repro prepare_data`` - Выполнить только подготовку данных
+* ``dvc repro train_model`` - Выполнить только обучение модели
+* ``dvc repro visualize`` - Выполнить только визуализацию
+* ``dvc pull`` - Скачать данные из удаленного хранилища
+* ``dvc push`` - Загрузить данные в удаленное хранилище
+
+MLflow команды
+--------------
+
+* ``mlflow ui`` - Запустить MLflow UI для просмотра экспериментов
+* ``mlflow models serve -m models:/wine-quality-model/Production`` - Запустить сервис для модели
+
+Python скрипты
+--------------
+
+Все основные скрипты находятся в директории ``src/``:
+
+* ``src/data/make_dataset.py`` - Подготовка данных
+* ``src/models/train_model.py`` - Обучение модели
+* ``src/models/predict_model.py`` - Предсказания
+* ``src/visualization/visualize.py`` - Визуализация результатов

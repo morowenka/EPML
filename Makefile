@@ -1,4 +1,4 @@
-.PHONY: uv-sync format lint typecheck download-data clean help clearml-start clearml-stop clearml-logs clearml-setup
+.PHONY: uv-sync format lint typecheck download-data clean help clearml-start clearml-stop clearml-logs clearml-setup docs docs-clean docs-serve
 
 UV := uv
 
@@ -14,6 +14,9 @@ help:
 	@echo "  clearml-stop   Stop ClearML Server"
 	@echo "  clearml-logs   View ClearML Server logs"
 	@echo "  clearml-setup  Setup ClearML (start server and create project)"
+	@echo "  docs           Build documentation"
+	@echo "  docs-clean     Clean documentation build"
+	@echo "  docs-serve     Build and serve documentation locally"
 
 uv-sync:
 	$(UV) sync
@@ -49,3 +52,12 @@ clearml-setup: clearml-start
 	@echo "Waiting for ClearML Server to be ready..."
 	@sleep 10
 	@echo "Run 'python scripts/create_clearml_project.py' after creating account in UI"
+
+docs:
+	cd docs && $(UV) run sphinx-build -b html . _build/html
+
+docs-clean:
+	rm -rf docs/_build
+
+docs-serve: docs
+	cd docs/_build/html && python -m http.server 8000

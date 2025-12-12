@@ -1,6 +1,72 @@
-Getting started
-===============
+Быстрый старт
+=============
 
-This is where you describe how to get set up on a clean install, including the
-commands necessary to get the raw data (using the `sync_data_from_s3` command,
-for example), and then how to make the cleaned, final data sets.
+Добро пожаловать в Wine Quality Workspace! Этот проект предоставляет готовое окружение для экспериментов с датасетом Wine Quality.
+
+Шаг 1: Установка
+---------------
+
+См. подробные инструкции в разделе :doc:`installation`.
+
+Кратко:
+
+.. code-block:: bash
+
+   # Установите uv (если еще не установлен)
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+
+   # Установите зависимости
+   uv sync
+
+Шаг 2: Подготовка данных
+------------------------
+
+Скачайте датасет:
+
+.. code-block:: bash
+
+   make download-data
+
+Или вручную:
+
+.. code-block:: bash
+
+   bash data/download_dataset.sh
+
+Шаг 3: Запуск пайплайна
+-----------------------
+
+Запустите полный пайплайн:
+
+.. code-block:: bash
+
+   dvc repro
+
+Это выполнит:
+1. Подготовку данных
+2. Обучение модели
+3. Визуализацию результатов
+
+Шаг 4: Просмотр результатов
+---------------------------
+
+Просмотрите метрики:
+
+.. code-block:: bash
+
+   cat reports/metrics.json
+
+Запустите MLflow UI:
+
+.. code-block:: bash
+
+   mlflow ui
+
+Откройте браузер на `http://localhost:5000`.
+
+Следующие шаги
+-------------
+
+* Изучите :doc:`usage` для подробной информации об использовании
+* Ознакомьтесь с :doc:`api` для документации API
+* Прочитайте :doc:`experiments` для работы с экспериментами
