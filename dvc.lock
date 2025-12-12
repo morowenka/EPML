@@ -15,8 +15,8 @@ stages:
       size: 78057
     - path: src/data/make_dataset.py
       hash: md5
-      md5: 3d0db107658be55a855ff4952bbc6c71
-      size: 3650
+      md5: 91ae6d0b125ccc295e1ef72db49165ec
+      size: 3678
     params:
       params.json:
         data:
@@ -41,8 +41,8 @@ stages:
       size: 250585
     - path: src/models/train_model.py
       hash: md5
-      md5: 2ffd859cc5b956e84cadb43544b9bda8
-      size: 8426
+      md5: 8db2bc44b5a2a04f14fb05c40822ab67
+      size: 8433
     params:
       params.json:
         train:
@@ -63,7 +63,7 @@ stages:
       size: 1879
     - path: reports/metrics.json
       hash: md5
-      md5: 210fb72f12b908b47b866f47fb96781b
+      md5: d91b1b87ee7915a7cf7d972c090d919b
       size: 902
   visualize:
     cmd: PYTHONPATH=. uv run python src/visualization/visualize.py 
@@ -75,12 +75,12 @@ stages:
       size: 459
     - path: reports/metrics.json
       hash: md5
-      md5: 210fb72f12b908b47b866f47fb96781b
+      md5: d91b1b87ee7915a7cf7d972c090d919b
       size: 902
     - path: src/visualization/visualize.py
       hash: md5
-      md5: bb465b81549ff51720a2aaa77d84adeb
-      size: 2427
+      md5: 9a1f9a189b6a8f85f3160c6c664c3dfc
+      size: 2379
     outs:
     - path: reports/figures/metrics_summary.png
       hash: md5

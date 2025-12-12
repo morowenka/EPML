@@ -94,7 +94,7 @@
    dvc repro train_model
    
    # С конфигурацией Random Forest
-   uv run python src/models/train_model.py \
+   PYTHONPATH=. uv run python src/models/train_model.py \
      data/processed/wine_processed.csv \
      models/model.pkl \
      reports/metrics.json \
@@ -122,7 +122,7 @@
    - `conf/config_svm.yaml` — SVM
 2. Запустить обучение с выбранной конфигурацией:
    ```bash
-   uv run python src/models/train_model.py \
+   PYTHONPATH=. uv run python src/models/train_model.py \
      data/processed/wine_processed.csv \
      models/model.pkl \
      reports/metrics.json \
@@ -155,5 +155,4 @@ experiments.log            # Лог выполнения пайплайна
 
 ## Скриншоты
 
-<!-- Вставьте скриншоты здесь -->
-
+![alt text](<../data/screenshots/image copy 7.png>)
