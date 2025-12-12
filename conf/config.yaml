@@ -16,6 +16,9 @@ train:
     experiment_name: wine-quality
     run_name_prefix: baseline
     model_name: wine-quality-model
+  clearml:
+    project_name: wine-quality-mlops
+    task_name: null  # Auto-generated if null
 
 visualization:
   enabled: true

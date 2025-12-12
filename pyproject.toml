@@ -17,6 +17,7 @@ dependencies = [
     "omegaconf==2.3.0",
     "matplotlib==3.9.2",
     "seaborn==0.13.2",
+    "clearml==1.15.0",
 ]
 
 [tool.uv]

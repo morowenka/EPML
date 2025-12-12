@@ -18,6 +18,16 @@ from sklearn.svm import SVC
 
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
+# ClearML integration (optional, fails gracefully if not configured)
+try:
+    from clearml import OutputModel, Task
+
+    CLEARML_AVAILABLE = True
+except ImportError:
+    CLEARML_AVAILABLE = False
+    Task = None
+    OutputModel = None
+
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_fmt)
 logger = logging.getLogger(__name__)
@@ -94,6 +104,57 @@ def _log_model_params(model) -> dict[str, Any]:
     return prepared
 
 
+def _init_clearml_task(
+    train_params: dict[str, Any],
+    model_type: str,
+    config_path: Path | None,
+) -> Task | None:
+    """Initialize ClearML Task for experiment tracking."""
+    if not CLEARML_AVAILABLE:
+        logger.debug("ClearML not available, skipping ClearML integration")
+        return None
+
+    try:
+        clearml_params = train_params.get("clearml", {})
+        project_name = clearml_params.get("project_name", "wine-quality-mlops")
+        task_name = clearml_params.get("task_name")
+
+        if not task_name:
+            timestamp = datetime.now(tz=UTC).strftime("%Y%m%d-%H%M%S")
+            task_name = f"{model_type}-{timestamp}"
+
+        # Initialize ClearML Task
+        task = Task.init(
+            project_name=project_name,
+            task_name=task_name,
+            auto_connect_frameworks={
+                "matplotlib": False,  # We'll log manually
+                "tensorboard": False,
+                "pytorch": False,
+                "xgboost": False,
+                "scikit": True,  # Auto-connect scikit-learn
+            },
+            auto_connect_streams=True,
+        )
+
+        # Add tags
+        task.add_tags(["train_model", model_type, "mlops"])
+
+        # Connect configuration
+        if config_path and config_path.exists():
+            task.connect_configuration(config_path, name="config")
+        else:
+            # Connect parameters from dict
+            task.connect(train_params)
+
+        logger.info("ClearML Task initialized: %s/%s", project_name, task_name)
+        return task
+
+    except Exception as e:
+        logger.warning("Failed to initialize ClearML Task: %s", e)
+        return None
+
+
 @click.command()
 @click.argument("processed_dataset_path", type=click.Path(exists=True, path_type=Path))
 @click.argument("model_output_path", type=click.Path(path_type=Path))
@@ -160,6 +221,13 @@ def main(
     model = _build_model(model_params)
     experiment_name, run_name = _prepare_mlflow(train_params)
 
+    # Initialize ClearML Task
+    clearml_task = _init_clearml_task(
+        train_params,
+        model_params.get("type", "unknown"),
+        config_path,
+    )
+
     logger.info("Training %s", model.__class__.__name__)
     with mlflow.start_run(run_name=run_name) as run:
         mlflow.set_tag("stage", "train_model")
@@ -179,6 +247,37 @@ def main(
 
         mlflow.log_metrics({"accuracy": accuracy, "f1_macro": f1_macro})
 
+        # Log metrics to ClearML
+        if clearml_task:
+            try:
+                clearml_task.logger.report_scalar(
+                    title="Metrics",
+                    series="accuracy",
+                    value=accuracy,
+                    iteration=0,
+                )
+                clearml_task.logger.report_scalar(
+                    title="Metrics",
+                    series="f1_macro",
+                    value=f1_macro,
+                    iteration=0,
+                )
+                # Log hyperparameters
+                clearml_task.logger.report_scalar(
+                    title="Data",
+                    series="n_samples",
+                    value=len(df),
+                    iteration=0,
+                )
+                clearml_task.logger.report_scalar(
+                    title="Data",
+                    series="n_features",
+                    value=X.shape[1],
+                    iteration=0,
+                )
+            except Exception as e:
+                logger.warning("Failed to log metrics to ClearML: %s", e)
+
         model_output_path.parent.mkdir(parents=True, exist_ok=True)
         metrics_output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -193,6 +292,26 @@ def main(
         model_name = mlflow_params.get("model_name", "wine-quality-model")
         logger.info("Registering model '%s' in Model Registry", model_name)
         mlflow.register_model(model_info.model_uri, model_name)
+
+        # Register model in ClearML
+        if clearml_task:
+            try:
+                clearml_model = OutputModel(task=clearml_task, name=model_name)
+                clearml_model.update_weights(weights_filename=str(model_output_path))
+                clearml_model.update_metadata(
+                    metadata={
+                        "model_type": model.__class__.__name__,
+                        "accuracy": accuracy,
+                        "f1_macro": f1_macro,
+                        "n_samples": len(df),
+                        "n_features": X.shape[1],
+                        "timestamp": datetime.now(tz=UTC).isoformat(),
+                    }
+                )
+                clearml_model.set_tags(["production", model_params.get("type", "unknown")])
+                logger.info("Model registered in ClearML Model Registry")
+            except Exception as e:
+                logger.warning("Failed to register model in ClearML: %s", e)
 
         metadata = {
             "timestamp_utc": datetime.now(tz=UTC).isoformat(),
@@ -223,8 +342,25 @@ def main(
 
         mlflow.log_artifact(str(metrics_output_path))
 
+        # Log artifacts to ClearML
+        if clearml_task:
+            try:
+                clearml_task.upload_artifact(
+                    name="metrics", artifact_object=str(metrics_output_path)
+                )
+                clearml_task.upload_artifact(name="model", artifact_object=str(model_output_path))
+            except Exception as e:
+                logger.warning("Failed to upload artifacts to ClearML: %s", e)
+
         # Log pipeline completion
         log_pipeline_end(monitor, "train_model", {"accuracy": accuracy, "f1_macro": f1_macro})
+
+        # Close ClearML Task
+        if clearml_task:
+            try:
+                clearml_task.close()
+            except Exception as e:
+                logger.warning("Failed to close ClearML Task: %s", e)
 
 
 if __name__ == "__main__":

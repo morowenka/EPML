@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
 
 import click
@@ -9,11 +10,53 @@ from omegaconf import OmegaConf
 
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
+# ClearML integration (optional, fails gracefully if not configured)
+try:
+    from clearml import Task
+
+    CLEARML_AVAILABLE = True
+except ImportError:
+    CLEARML_AVAILABLE = False
+    Task = None
+
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_fmt)
 logger = logging.getLogger(__name__)
 
 sns.set_style("whitegrid")
+
+
+def _init_clearml_task(config_path: Path | None) -> Task | None:
+    """Initialize ClearML Task for visualization tracking."""
+    if not CLEARML_AVAILABLE:
+        logger.debug("ClearML not available, skipping ClearML integration")
+        return None
+
+    try:
+        project_name = "wine-quality-mlops"
+        timestamp = datetime.now(tz=UTC).strftime("%Y%m%d-%H%M%S")
+        task_name = f"visualize-{timestamp}"
+
+        task = Task.init(
+            project_name=project_name,
+            task_name=task_name,
+            task_type=Task.TaskTypes.monitor,
+            auto_connect_frameworks={
+                "matplotlib": True,  # Auto-connect matplotlib
+            },
+        )
+
+        task.add_tags(["visualize", "monitoring", "mlops"])
+
+        if config_path and config_path.exists():
+            task.connect_configuration(config_path, name="config")
+
+        logger.info("ClearML Task initialized for visualization: %s/%s", project_name, task_name)
+        return task
+
+    except Exception as e:
+        logger.warning("Failed to initialize ClearML Task: %s", e)
+        return None
 
 
 @click.command()
@@ -32,6 +75,9 @@ def main(metrics_path: Path, output_dir: Path, config_path: Path | None) -> None
     # Setup monitoring
     monitor = setup_monitoring(config_path)
     log_pipeline_start(monitor, "visualize")
+
+    # Initialize ClearML Task
+    clearml_task = _init_clearml_task(config_path)
 
     enabled = True
     if config_path and config_path.exists():
@@ -63,10 +109,46 @@ def main(metrics_path: Path, output_dir: Path, config_path: Path | None) -> None
     output_file = output_dir / "metrics_summary.png"
     plt.tight_layout()
     plt.savefig(output_file, dpi=150, bbox_inches="tight")
+
+    # Log to ClearML
+    if clearml_task:
+        try:
+            clearml_task.logger.report_image(
+                title="Metrics Summary",
+                series="metrics_plot",
+                iteration=0,
+                local_path=str(output_file),
+            )
+            clearml_task.logger.report_scalar(
+                title="Metrics",
+                series="accuracy",
+                value=metrics["metrics"]["accuracy"],
+                iteration=0,
+            )
+            clearml_task.logger.report_scalar(
+                title="Metrics",
+                series="f1_macro",
+                value=metrics["metrics"]["f1_macro"],
+                iteration=0,
+            )
+            clearml_task.upload_artifact(
+                name="visualization",
+                artifact_object=str(output_file),
+            )
+        except Exception as e:
+            logger.warning("Failed to log to ClearML: %s", e)
+
     plt.close()
     logger.info("Saved visualization to %s", output_file)
 
     log_pipeline_end(monitor, "visualize", {"output_file": str(output_file)})
+
+    # Close ClearML Task
+    if clearml_task:
+        try:
+            clearml_task.close()
+        except Exception as e:
+            logger.warning("Failed to close ClearML Task: %s", e)
 
 
 if __name__ == "__main__":
