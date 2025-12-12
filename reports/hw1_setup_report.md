@@ -64,7 +64,7 @@ docker run --rm -it --env-file .env -v "$(pwd)/data:/app/data" wine-quality uv r
 
 ### Git workflow
 
-- `main` — стабильная ветка с проверенным кодом.
+- `master` — стабильная ветка с проверенным кодом.
 - `develop` — интеграционная ветка для следующих релизов.
 - Рабочие задачи ведутся в ветках `feature/<имя-задачи>` и вливаются через ревью.
 - `pre-commit` проверяет формат, lint и типы до коммита.
@@ -144,7 +144,7 @@ docker run --rm -it --env-file .env -v "$(pwd)/data:/app/data" wine-quality uv r
 
 ## 6. Git workflow
 
-- Рекомендуемая схема веток: `main` (стабильная), `develop` (интеграция), `feature/*` (разработка).
+- Рекомендуемая схема веток: `master` (стабильная), `develop` (интеграция), `feature/*` (разработка).
 - `pre-commit` включён: `uv run pre-commit install`.
 - `.gitignore` обновлён под ML-проекты (`data/`, `.venv/`, `.env`, артефакты линтеров).
 
