@@ -1,0 +1,38 @@
+stages:
+  prepare_data:
+    cmd: PYTHONPATH=. uv run python src/data/make_dataset.py data/raw/WineQT.csv 
+      data/processed/wine_processed.csv --params-path params.json --config-path conf/config.yaml
+    deps:
+    - src/data/make_dataset.py
+    - data/raw/WineQT.csv
+    - conf/config.yaml
+    params:
+    - params.json:
+      - data
+    outs:
+    - data/processed/wine_processed.csv
+  train_model:
+    cmd: PYTHONPATH=. uv run python src/models/train_model.py 
+      data/processed/wine_processed.csv models/model.pkl reports/metrics.json 
+      --params-path params.json --config-path conf/config.yaml
+    deps:
+    - data/processed/wine_processed.csv
+    - src/models/train_model.py
+    - conf/config.yaml
+    params:
+    - params.json:
+      - train
+    outs:
+    - models/model.pkl
+    metrics:
+    - reports/metrics.json:
+        cache: false
+  visualize:
+    cmd: PYTHONPATH=. uv run python src/visualization/visualize.py 
+      reports/metrics.json reports/figures --config-path conf/config.yaml
+    deps:
+    - reports/metrics.json
+    - src/visualization/visualize.py
+    - conf/config.yaml
+    outs:
+    - reports/figures/metrics_summary.png

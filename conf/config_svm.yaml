@@ -1,0 +1,15 @@
+#@package _global_
+defaults:
+  - config
+
+train:
+  model:
+    type: svm
+    svm:
+      C: 1.0
+      kernel: rbf
+      gamma: scale
+      random_state: 13
+  mlflow:
+    run_name_prefix: svm
+

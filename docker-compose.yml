@@ -1,0 +1,123 @@
+# ClearML Server Docker Compose Configuration
+# 
+# ВАЖНО: Для ДЗ рекомендуется использовать ClearML Cloud (бесплатно):
+#   1. Зарегистрируйтесь на https://app.clear.ml
+#   2. Получите API ключи в Profile
+#   3. Настройте: python scripts/setup_clearml_auth.py
+#
+# Локальный сервер требует правильного образа Docker.
+# Если образ недоступен, используйте ClearML Cloud.
+#
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: clearml-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-clearml}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-clearml}
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - clearml-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: clearml-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - clearml-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: clearml-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - clearml-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  clearml-server:
+    image: allegroai/clearml-server:${CLEARML_SERVER_VERSION:-latest}
+    container_name: clearml-server
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - CLEARML_HOST_IP=${CLEARML_HOST_IP:-localhost}
+      - CLEARML_MONGO_HOST=${CLEARML_MONGO_HOST:-mongodb}
+      - CLEARML_MONGO_PORT=${CLEARML_MONGO_PORT:-27017}
+      - CLEARML_MONGO_USER=${CLEARML_MONGO_USER:-clearml}
+      - CLEARML_MONGO_PASSWORD=${CLEARML_MONGO_PASSWORD:-clearml}
+      - CLEARML_ELASTIC_HOST=${CLEARML_ELASTIC_HOST:-elasticsearch}
+      - CLEARML_ELASTIC_PORT=${CLEARML_ELASTIC_PORT:-9200}
+      - CLEARML_REDIS_HOST=${CLEARML_REDIS_HOST:-redis}
+      - CLEARML_REDIS_PORT=${CLEARML_REDIS_PORT:-6379}
+      - CLEARML_FILES_HOST=${CLEARML_FILES_HOST:-localhost}
+      - CLEARML_FILES_PORT=${CLEARML_FILES_PORT:-8081}
+      - CLEARML_FILES_PATH=/opt/clearml/data/fileserver
+      - CLEARML_LOG_LEVEL=${CLEARML_LOG_LEVEL:-INFO}
+    volumes:
+      - clearml_files:/opt/clearml/data/fileserver
+      - clearml_logs:/opt/clearml/data/logs
+    ports:
+      - "8080:8080"  # Web UI
+      - "8081:8081"  # File Server
+    networks:
+      - clearml-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v2.23/system.health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  mongodb_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  redis_data:
+    driver: local
+  clearml_files:
+    driver: local
+  clearml_logs:
+    driver: local
+
+networks:
+  clearml-network:
+    driver: bridge
+

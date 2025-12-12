@@ -7,9 +7,17 @@ requires-python = ">=3.11"
 authors = [{ name = "Mark Basov" }]
 
 dependencies = [
+    "click==8.1.7",
     "pandas==2.2.3",
     "python-dotenv==1.0.1",
     "kaggle==1.6.17",
+    "scikit-learn==1.5.2",
+    "mlflow==3.7.0",
+    "pyarrow==22.0.0",
+    "omegaconf==2.3.0",
+    "matplotlib==3.9.2",
+    "seaborn==0.13.2",
+    "clearml==1.15.0",
 ]
 
 [tool.uv]
@@ -26,17 +34,14 @@ lint.ignore = [
 [tool.ruff.format]
 preview = true
 
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-ignore_missing_imports = true
-
 [dependency-groups]
 dev = [
-    "mypy==1.13.0",
+    "dvc==3.59.0",
     "pre-commit==4.0.1",
     "ruff==0.7.1",
 ]
-
+docs = [
+    "sphinx==7.2.6",
+    "sphinx-rtd-theme==2.0.0",
+    "sphinx-autodoc-typehints==1.25.2",
+]

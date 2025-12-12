@@ -1,0 +1,14 @@
+#@package _global_
+defaults:
+  - config
+
+train:
+  model:
+    type: random_forest
+    random_forest:
+      n_estimators: 100
+      max_depth: 10
+      random_state: 13
+  mlflow:
+    run_name_prefix: random-forest
+
