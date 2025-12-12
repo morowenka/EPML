@@ -19,6 +19,7 @@ Wine Quality Workspace
    commands
    experiments
    reproducibility
+   reports
 
 Индексы и таблицы
 =================
