@@ -13,3 +13,4 @@ Wine Quality Workspace
 
 - Подробное описание домашнего задания, установка окружения и скриншоты вынесены в `reports/setup_report.md`.
 - Настройка версионирования данных и моделей для ДЗ 2 описана в `reports/hw2_versioning_report.md`.
+- Настройка трекинга экспериментов с MLflow для ДЗ 3 описана в `reports/hw3_experiment_tracking_report.md`.
