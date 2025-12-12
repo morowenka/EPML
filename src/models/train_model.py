@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 def _load_params(params_path: Path) -> dict[str, Any]:
     if not params_path.exists():
         logger.warning("Params file %s not found. Using defaults.", params_path)
-        return cast(dict[str, Any], {})
+        return {}
 
     with params_path.open("r", encoding="utf-8") as fp:
         return cast(dict[str, Any], json.load(fp))
@@ -47,7 +47,7 @@ def _prepare_mlflow(train_params: dict[str, Any]) -> tuple[str, str]:
     experiment_name = mlflow_params.get("experiment_name", "wine-quality")
     mlflow.set_experiment(experiment_name)
 
-    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+    timestamp = datetime.now(tz=UTC).strftime("%Y%m%d-%H%M%S")
     run_name_prefix = mlflow_params.get("run_name_prefix")
     run_name = mlflow_params.get("run_name")
     if not run_name:
@@ -138,10 +138,16 @@ def main(
         joblib.dump(model, model_output_path)
 
         mlflow.log_artifact(str(model_output_path))
-        mlflow.sklearn.log_model(model, artifact_path="model")
+        model_info = mlflow.sklearn.log_model(model, artifact_path="model")
+
+        # Register model in Model Registry
+        mlflow_params = train_params.get("mlflow", {})
+        model_name = mlflow_params.get("model_name", "wine-quality-model")
+        logger.info("Registering model '%s' in Model Registry", model_name)
+        mlflow.register_model(model_info.model_uri, model_name)
 
         metadata = {
-            "timestamp_utc": datetime.now(UTC).isoformat(),
+            "timestamp_utc": datetime.now(tz=UTC).isoformat(),
             "mlflow": {
                 "tracking_uri": mlflow.get_tracking_uri(),
                 "experiment_id": run.info.experiment_id,

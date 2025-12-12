@@ -94,3 +94,15 @@ target/
 
 # csv
 *.csv
+
+# MLflow tracking
+mlruns/
+
+# Trained models (tracked by DVC, not git)
+models/*.pkl
+
+# Data artifacts (tracked by DVC, not git)
+data/interim/
+data/external/
+data/screenshots/
+AGENTS.md

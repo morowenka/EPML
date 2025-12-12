@@ -4,18 +4,18 @@
   },
   "train": {
     "random_state": 13,
-    "test_size": 0.25,
+    "test_size": 0.2,
     "model": {
       "logistic_regression": {
-        "solver": "lbfgs",
         "max_iter": 500,
         "multi_class": "auto"
       }
     },
     "mlflow": {
       "experiment_name": "wine-quality",
-      "tracking_dir": "mlruns",
-      "run_name_prefix": "baseline"
+      "run_name_prefix": "baseline",
+      "model_name": "wine-quality-model"
     }
   }
 }
+

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def _load_params(params_path: Path) -> dict[str, Any]:
     if not params_path.exists():
         logger.warning("Params file %s not found. Using defaults.", params_path)
-        return cast(dict[str, Any], {})
+        return {}
 
     with params_path.open("r", encoding="utf-8") as fp:
         return cast(dict[str, Any], json.load(fp))
