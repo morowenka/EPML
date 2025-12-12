@@ -30,7 +30,14 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
+    "myst_parser",
 ]
+
+# Настройка для поддержки Markdown
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
