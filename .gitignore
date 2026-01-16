@@ -118,3 +118,6 @@ reports/statistics.json
 
 # Empty placeholder scripts
 clearml-server-installer.sh
+
+# ClearML setup docs (local only)
+CLEARML_SETUP.md
