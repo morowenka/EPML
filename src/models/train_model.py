@@ -18,6 +18,16 @@ from sklearn.svm import SVC
 
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
+# Optional ClearML integration
+try:
+    from clearml import OutputModel, Task
+
+    CLEARML_AVAILABLE = True
+except ImportError:
+    CLEARML_AVAILABLE = False
+    Task = None  # type: ignore[assignment, misc]
+    OutputModel = None  # type: ignore[assignment, misc]
+
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_fmt)
 logger = logging.getLogger(__name__)
@@ -90,6 +100,27 @@ def main(cfg: DictConfig) -> None:
         "train_model",
         {"model_type": cfg.train.model.type},
     )
+
+    # Initialize ClearML task (optional)
+    clearml_task = None
+    if CLEARML_AVAILABLE:
+        try:
+            clearml_cfg = cfg.train.get("clearml", {})
+            project_name = clearml_cfg.get("project_name", "wine-quality-mlops")
+            task_name = clearml_cfg.get("task_name") or f"train_{cfg.train.model.type}"
+            clearml_task = Task.init(
+                project_name=project_name,
+                task_name=task_name,
+                task_type=Task.TaskTypes.training,
+                auto_connect_frameworks={"scikit-learn": True},
+            )
+            clearml_task.add_tags([cfg.train.model.type, "train_model"])
+            logger.info("ClearML task initialized: %s/%s", project_name, task_name)
+        except Exception as e:
+            logger.warning("ClearML initialization failed (continuing without): %s", e)
+            clearml_task = None
+    else:
+        logger.info("ClearML not available, using MLflow only")
 
     # Get paths from config
     processed_dataset_path = Path(cfg.paths.processed_data)
@@ -182,6 +213,30 @@ def main(cfg: DictConfig) -> None:
             json.dump(metadata, fp, indent=2)
 
         mlflow.log_artifact(str(metrics_output_path))
+
+        # Log to ClearML if available
+        if clearml_task:
+            try:
+                clearml_task.get_logger().report_scalar(
+                    "metrics", "accuracy", value=accuracy, iteration=0
+                )
+                clearml_task.get_logger().report_scalar(
+                    "metrics", "f1_macro", value=f1_macro, iteration=0
+                )
+                clearml_task.upload_artifact("model", artifact_object=str(model_output_path))
+                clearml_task.upload_artifact("metrics", artifact_object=str(metrics_output_path))
+
+                # Register model in ClearML
+                clearml_model = OutputModel(task=clearml_task, name=model_name)
+                clearml_model.update_weights(weights_filename=str(model_output_path))
+                # Note: update_labels expects integer values for label enumeration
+                # Use task metadata for string values instead
+                clearml_task.set_parameter("model/type", model.__class__.__name__)
+                clearml_task.set_parameter("model/accuracy", accuracy)
+                clearml_task.set_parameter("model/f1_macro", f1_macro)
+                logger.info("Model registered in ClearML: %s", model_name)
+            except Exception as e:
+                logger.warning("ClearML logging failed (continuing): %s", e)
 
         # Log pipeline completion
         log_pipeline_end(monitor, "train_model", {"accuracy": accuracy, "f1_macro": f1_macro})

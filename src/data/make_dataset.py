@@ -8,6 +8,15 @@ from sklearn.preprocessing import StandardScaler
 
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
+# Optional ClearML integration
+try:
+    from clearml import Task
+
+    CLEARML_AVAILABLE = True
+except ImportError:
+    CLEARML_AVAILABLE = False
+    Task = None  # type: ignore[assignment, misc]
+
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_fmt)
 logger = logging.getLogger(__name__)
@@ -19,6 +28,25 @@ def main(cfg: DictConfig) -> None:
     # Setup monitoring
     monitor = setup_monitoring()
     log_pipeline_start(monitor, "prepare_data", dict(cfg.data))
+
+    # Initialize ClearML task (optional)
+    clearml_task = None
+    if CLEARML_AVAILABLE:
+        try:
+            clearml_cfg = cfg.train.get("clearml", {}) if "train" in cfg else {}
+            project_name = clearml_cfg.get("project_name", "wine-quality-mlops")
+            clearml_task = Task.init(
+                project_name=project_name,
+                task_name="prepare_data",
+                task_type=Task.TaskTypes.data_processing,
+            )
+            clearml_task.add_tags(["data_processing", "prepare_data"])
+            logger.info("ClearML task initialized: %s/prepare_data", project_name)
+        except Exception as e:
+            logger.warning("ClearML initialization failed (continuing without): %s", e)
+            clearml_task = None
+    else:
+        logger.info("ClearML not available, running without experiment tracking")
 
     # Get paths from config
     raw_input_filepath = Path(cfg.paths.raw_data)
@@ -49,6 +77,22 @@ def main(cfg: DictConfig) -> None:
     logger.info("Writing processed dataset to %s", processed_output_filepath)
     processed_output_filepath.parent.mkdir(parents=True, exist_ok=True)
     processed_df.to_csv(processed_output_filepath, index=False)
+
+    # Log to ClearML if available
+    if clearml_task:
+        try:
+            clearml_task.get_logger().report_scalar(
+                "data", "n_samples", value=len(processed_df), iteration=0
+            )
+            clearml_task.get_logger().report_scalar(
+                "data", "n_features", value=len(feature_columns), iteration=0
+            )
+            clearml_task.upload_artifact(
+                "processed_dataset", artifact_object=str(processed_output_filepath)
+            )
+            logger.info("Data logged to ClearML")
+        except Exception as e:
+            logger.warning("ClearML logging failed (continuing): %s", e)
 
     log_pipeline_end(
         monitor,
