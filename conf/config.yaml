@@ -1,7 +1,21 @@
-# Base configuration
+# Base configuration for Wine Quality ML pipeline
+# Use with: python script.py --config-name=config
+# Override with: python script.py --config-name=config_rf
+
+# Paths configuration
+paths:
+  raw_data: data/raw/WineQT.csv
+  processed_data: data/processed/wine_processed.csv
+  model: models/model.pkl
+  metrics: reports/metrics.json
+  statistics: reports/statistics.json
+  figures: reports/figures
+
+# Data processing parameters
 data:
   feature_scaling: true
 
+# Training parameters
 train:
   random_state: 13
   test_size: 0.2
@@ -20,11 +34,20 @@ train:
     project_name: wine-quality-mlops
     task_name: null  # Auto-generated if null
 
+# Visualization parameters
 visualization:
   enabled: true
-  output_dir: reports/figures
 
+# Monitoring parameters
 monitoring:
   log_file: experiments.log
   enabled: true
 
+# Hydra configuration
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  sweep:
+    dir: .
+    subdir: .
