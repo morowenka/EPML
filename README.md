@@ -3,6 +3,19 @@ Wine Quality Workspace
 
 Рабочее окружение для экспериментов с датасетом Wine Quality из Kaggle, собранное на базе cookiecutter data science и адаптированное под `uv`, Kaggle API и контейнеризацию.
 
+## Быстрый старт (воспроизведение пайплайна)
+
+```bash
+# Установить зависимости
+uv sync --frozen
+
+# Запустить пайплайн (данные генерируются автоматически из sklearn)
+dvc repro
+
+# Проверить метрики
+dvc metrics show
+```
+
 ## О проекте
 
 - Название: `Wine Quality Workspace`.
