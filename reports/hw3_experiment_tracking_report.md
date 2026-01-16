@@ -116,4 +116,11 @@ def process_data(df):
 
 ## Скриншоты
 
-![alt text](<../data/screenshots/image copy 6.png>)
+### Список экспериментов MLflow
+![experiments](../data/screenshots/experiments.png)
+
+### Детали эксперимента (параметры, метрики, модель)
+![experiment_baseline](../data/screenshots/experiment_baseline.png)
+
+### Model Registry
+![models](../data/screenshots/models.png)
