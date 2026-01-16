@@ -1,3 +1,42 @@
+"""
+Модуль визуализации (Visualization).
+
+Этот модуль создает визуализации результатов обучения моделей
+и метрик экспериментов.
+
+Создаваемые визуализации
+------------------------
+
+- **metrics_summary.png** - Столбчатая диаграмма с основными метриками
+  (Accuracy, F1 Macro)
+
+Использование
+-------------
+
+Запуск через Hydra::
+
+    uv run python src/visualization/visualize.py
+
+Запуск через DVC pipeline::
+
+    dvc repro visualize
+
+Параметры конфигурации (conf/config.yaml)::
+
+    visualization:
+      enabled: true
+
+    paths:
+      metrics: reports/metrics.json
+      figures: reports/figures
+
+Note
+----
+Модуль использует matplotlib backend 'Agg' для генерации
+изображений без GUI. Результаты логируются в ClearML
+при наличии интеграции.
+"""
+
 import json
 import logging
 from pathlib import Path

@@ -1,3 +1,41 @@
+"""
+Модуль мониторинга и логирования (Monitoring).
+
+Этот модуль предоставляет инструменты для мониторинга
+выполнения пайплайнов и логирования экспериментов.
+
+Основные функции
+----------------
+
+- :func:`setup_monitoring` - Настройка логгера мониторинга
+- :func:`log_pipeline_start` - Логирование начала этапа пайплайна
+- :func:`log_pipeline_end` - Логирование завершения этапа пайплайна
+- :func:`log_function_call` - Декоратор для логирования вызовов функций
+- :func:`log_execution_time` - Декоратор для логирования времени выполнения
+- :func:`log_with_monitoring` - Комбинированный декоратор мониторинга
+
+Использование
+-------------
+
+Базовое использование в скриптах::
+
+    from src.utils.monitoring import setup_monitoring, log_pipeline_start, log_pipeline_end
+
+    logger = setup_monitoring()
+    log_pipeline_start(logger, "train_model", {"model": "RandomForest"})
+    # ... код обучения ...
+    log_pipeline_end(logger, "train_model", {"accuracy": 0.95})
+
+Использование декораторов::
+
+    from src.utils.monitoring import log_function_call
+
+    @log_function_call()
+    def train_model(X, y):
+        # ... код обучения ...
+        return model
+"""
+
 import functools
 import logging
 import time

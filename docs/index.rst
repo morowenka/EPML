@@ -20,6 +20,7 @@ Wine Quality Workspace
    experiments
    reproducibility
    reports
+   clearml_setup
 
 Индексы и таблицы
 =================

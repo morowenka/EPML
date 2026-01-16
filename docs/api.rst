@@ -12,4 +12,5 @@ API Документация
    api/models
    api/visualization
    api/utils
+   api/pipelines
 

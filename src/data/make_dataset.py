@@ -1,3 +1,36 @@
+"""
+Модуль подготовки данных (Data Preparation).
+
+Этот модуль отвечает за загрузку и предобработку датасета Wine Quality.
+Основные функции:
+
+- Загрузка сырых данных из CSV файла
+- Переименование целевой колонки (quality -> target)
+- Опциональное масштабирование признаков (StandardScaler)
+- Сохранение обработанных данных
+
+Использование
+-------------
+
+Запуск через Hydra::
+
+    uv run python src/data/make_dataset.py
+
+Параметры конфигурации (conf/config.yaml)::
+
+    data:
+      feature_scaling: true  # Включить масштабирование признаков
+
+    paths:
+      raw_data: data/raw/wine.csv
+      processed_data: data/processed/wine_processed.csv
+
+Note
+----
+При наличии ClearML, модуль автоматически логирует метаданные
+о датасете в ClearML для отслеживания экспериментов.
+"""
+
 import logging
 from pathlib import Path
 

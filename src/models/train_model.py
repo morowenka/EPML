@@ -1,3 +1,49 @@
+"""
+Модуль обучения моделей (Model Training).
+
+Этот модуль реализует обучение моделей машинного обучения
+на датасете Wine Quality с интеграцией MLflow и ClearML.
+
+Поддерживаемые модели
+---------------------
+
+- **LogisticRegression** - Логистическая регрессия
+- **RandomForestClassifier** - Случайный лес
+- **SVC** - Метод опорных векторов
+
+Использование
+-------------
+
+Запуск через Hydra::
+
+    uv run python src/models/train_model.py
+
+Запуск через DVC pipeline::
+
+    dvc repro train_model
+
+Параметры конфигурации (conf/config.yaml)::
+
+    train:
+      random_state: 42
+      test_size: 0.2
+      model:
+        type: random_forest  # или logistic_regression, svm
+        random_forest:
+          n_estimators: 100
+          max_depth: 10
+
+Результаты
+----------
+
+После обучения создаются следующие артефакты:
+
+- ``models/model.pkl`` - Обученная модель (joblib)
+- ``reports/metrics.json`` - Метрики и метаданные
+
+Метрики логируются в MLflow и опционально в ClearML.
+"""
+
 import json
 import logging
 from datetime import UTC, datetime
