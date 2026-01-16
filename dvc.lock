@@ -15,8 +15,8 @@ stages:
       size: 78057
     - path: src/data/make_dataset.py
       hash: md5
-      md5: 91ae6d0b125ccc295e1ef72db49165ec
-      size: 3678
+      md5: 0ef64b453298925bc1a230b60d9f553a
+      size: 3302
     params:
       params.json:
         data:
@@ -41,12 +41,12 @@ stages:
       size: 250585
     - path: src/models/train_model.py
       hash: md5
-      md5: 8db2bc44b5a2a04f14fb05c40822ab67
-      size: 8433
+      md5: 3b5bc075996d94a7e026471054cfc074
+      size: 8092
     params:
       params.json:
         train:
-          random_state: 13
+          random_state: 52
           test_size: 0.2
           model:
             logistic_regression:
@@ -63,7 +63,7 @@ stages:
       size: 1879
     - path: reports/metrics.json
       hash: md5
-      md5: d91b1b87ee7915a7cf7d972c090d919b
+      md5: 73cbf79fcbf5639568710c76c85c8226
       size: 902
   visualize:
     cmd: PYTHONPATH=. uv run python src/visualization/visualize.py 
@@ -75,14 +75,36 @@ stages:
       size: 459
     - path: reports/metrics.json
       hash: md5
-      md5: d91b1b87ee7915a7cf7d972c090d919b
+      md5: 73cbf79fcbf5639568710c76c85c8226
       size: 902
     - path: src/visualization/visualize.py
       hash: md5
-      md5: 9a1f9a189b6a8f85f3160c6c664c3dfc
-      size: 2379
+      md5: a84d3eb03d7a32c14a6d0eb732f50a88
+      size: 2663
     outs:
     - path: reports/figures/metrics_summary.png
       hash: md5
       md5: 0d280ed289f051766c7e4e530d1b5c67
       size: 25177
+  compute_statistics:
+    cmd: PYTHONPATH=. uv run python src/data/compute_statistics.py 
+      data/processed/wine_processed.csv reports/statistics.json --config-path 
+      conf/config.yaml
+    deps:
+    - path: conf/config.yaml
+      hash: md5
+      md5: 6f91c1c27caeaa34466bb1b71b8c6935
+      size: 459
+    - path: data/processed/wine_processed.csv
+      hash: md5
+      md5: be51dff919d2d7d2a5dc1a1cde4395fd
+      size: 250585
+    - path: src/data/compute_statistics.py
+      hash: md5
+      md5: 5801c42878bf7e869aa7e9f7a4b08bec
+      size: 3151
+    outs:
+    - path: reports/statistics.json
+      hash: md5
+      md5: af3b7fa71c54f5be76c5cdbdb8507c2a
+      size: 3207

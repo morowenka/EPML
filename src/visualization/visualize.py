@@ -5,8 +5,8 @@ from pathlib import Path
 import click
 import matplotlib.pyplot as plt
 import seaborn as sns
-from omegaconf import OmegaConf
 
+from src.utils.config import load_config_with_params
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -23,7 +23,7 @@ sns.set_style("whitegrid")
     "--config-path",
     default=None,
     type=click.Path(exists=False, path_type=Path),
-    help="Path to OmegaConf configuration file.",
+    help="Path to Hydra/OmegaConf configuration file.",
 )
 def main(metrics_path: Path, output_dir: Path, config_path: Path | None) -> None:
     """Generate visualization plots from metrics."""
@@ -33,10 +33,15 @@ def main(metrics_path: Path, output_dir: Path, config_path: Path | None) -> None
     monitor = setup_monitoring(config_path)
     log_pipeline_start(monitor, "visualize")
 
-    enabled = True
-    if config_path and config_path.exists():
-        cfg = OmegaConf.load(config_path)
-        enabled = cfg.get("visualization", {}).get("enabled", True)
+    # Load configuration using Hydra compose API
+    if config_path:
+        config_name = config_path.stem if config_path.is_file() else "config"
+        config_dir = config_path if config_path.is_dir() else config_path.parent
+        params = load_config_with_params(config_dir, None, config_name)
+    else:
+        params = load_config_with_params(None, None)
+
+    enabled = params.get("visualization", {}).get("enabled", True)
 
     if not enabled:
         logger.info("Visualization disabled in configuration")

@@ -6,153 +6,217 @@
 **DVC Pipelines** — Data Version Control pipelines для управления зависимостями между этапами ML пайплайна, кэширования результатов и автоматизации выполнения.
 
 ### Инструмент управления конфигурациями
-**OmegaConf** — YAML configuration library с поддержкой композиции конфигураций, валидации и иерархической структуры.
+**Hydra** — Configuration management framework от Facebook Research с поддержкой композиции конфигураций через `defaults`, иерархической структуры и CLI overrides.
 
 ## Настройка DVC Pipelines
 
-### Установка и конфигурация
-- DVC установлен через `uv` в `pyproject.toml` (версия `3.59.0`)
-- Пайплайн определен в `dvc.yaml` с тремя этапами:
-  - `prepare_data` — подготовка и обработка данных
-  - `train_model` — обучение модели
-  - `visualize` — визуализация результатов
+### Структура пайплайна (DAG)
 
-### Структура пайплайна
-- **Зависимости между этапами**: `train_model` зависит от `prepare_data`, `visualize` зависит от `train_model`
-- **Кэширование**: DVC автоматически кэширует результаты этапов на основе зависимостей и параметров
-- **Параллельное выполнение**: DVC поддерживает параллельное выполнение независимых этапов
-- **Отслеживание параметров**: Параметры отслеживаются через `params.json` и конфигурационные файлы
+```
+                   +--------------+
+                   | prepare_data |
+                   +--------------+
+                  ***             **
+                **                  ***
+              **                       **
++--------------------+             +-------------+
+| compute_statistics |             | train_model |
++--------------------+             +-------------+
+                                          *
+                                          *
+                                          *
+                                    +-----------+
+                                    | visualize |
+                                    +-----------+
+```
 
-### Интеграция с кодом
-- Все этапы пайплайна интегрированы в `dvc.yaml`
-- Каждый этап использует единообразный интерфейс командной строки
-- Поддержка конфигурационных файлов через OmegaConf
+### Этапы пайплайна
+1. **prepare_data** — подготовка и масштабирование данных
+2. **train_model** — обучение модели (независим от compute_statistics)
+3. **compute_statistics** — расчёт статистик датасета (независим от train_model)
+4. **visualize** — визуализация метрик
 
-## Настройка OmegaConf
+### Независимые этапы (параллельная структура DAG)
 
-### Установка и конфигурация
-- OmegaConf установлен через `uv` в `pyproject.toml` (версия `2.3.0`)
-- Базовая конфигурация в `conf/config.yaml`
-- Специализированные конфигурации для разных алгоритмов:
-  - `conf/config_logistic.yaml` — Logistic Regression
-  - `conf/config_rf.yaml` — Random Forest
-  - `conf/config_svm.yaml` — Support Vector Machine
+Этапы `train_model` и `compute_statistics` независимы друг от друга — оба зависят только от `prepare_data`. Это позволяет запускать их параллельно в отдельных терминалах:
 
-### Композиция конфигураций
-- Использование `defaults` для наследования базовой конфигурации
-- Переопределение параметров модели в специализированных конфигурациях
-- Иерархическая структура конфигураций
+```bash
+# Терминал 1: обучение модели
+dvc repro train_model
 
-### Валидация конфигураций
-- Автоматическая валидация типов через OmegaConf
-- Проверка существования обязательных параметров
-- Обработка отсутствующих конфигурационных файлов с fallback на значения по умолчанию
+# Терминал 2: расчёт статистик (одновременно)
+dvc repro compute_statistics
 
-### Интеграция с кодом
-- OmegaConf интегрирован в `src/models/train_model.py`, `src/data/make_dataset.py`, `src/visualization/visualize.py`
-- Поддержка как YAML (OmegaConf), так и JSON (обратная совместимость)
-- Автоматическое разрешение конфигураций через `OmegaConf.to_container()`
+# Или последовательный запуск всего пайплайна
+dvc repro
+```
+
+Проверка независимости этапов:
+```bash
+$ dvc dag
+                   +--------------+
+                   | prepare_data |
+                   +--------------+
+                  ***             **
+                **                  ***
+              **                       **
++--------------------+             +-------------+
+| compute_statistics |             | train_model |
++--------------------+             +-------------+
+```
+
+## Настройка Hydra
+
+### Установка
+```toml
+# pyproject.toml
+dependencies = [
+    "hydra-core==1.3.2",
+]
+```
+
+### Композиция конфигураций через defaults
+
+Базовая конфигурация `conf/config.yaml`:
+```yaml
+data:
+  feature_scaling: true
+
+train:
+  random_state: 13
+  test_size: 0.2
+  model:
+    type: logistic_regression
+    logistic_regression:
+      max_iter: 500
+      C: 1.0
+```
+
+Специализированная конфигурация `conf/config_rf.yaml` с наследованием:
+```yaml
+#@package _global_
+defaults:
+  - config  # Наследует базовую конфигурацию
+
+train:
+  model:
+    type: random_forest
+    random_forest:
+      n_estimators: 100
+      max_depth: 10
+```
+
+### Использование Hydra Compose API
+
+```python
+# src/utils/config.py
+from hydra import compose, initialize_config_dir
+from hydra.core.global_hydra import GlobalHydra
+from omegaconf import OmegaConf
+
+def load_config(config_path, config_name="config", overrides=None):
+    GlobalHydra.instance().clear()
+    with initialize_config_dir(config_dir=str(config_path)):
+        cfg = compose(config_name=config_name, overrides=overrides or [])
+        return OmegaConf.to_container(cfg, resolve=True)
+```
+
+### Доступные конфигурации моделей
+- `conf/config.yaml` — Logistic Regression (baseline)
+- `conf/config_rf.yaml` — Random Forest
+- `conf/config_svm.yaml` — SVM
+- `conf/config_logistic.yaml` — Logistic Regression (альтернативные параметры)
 
 ## Система мониторинга
 
 ### Реализация
-- Модуль мониторинга в `src/utils/monitoring.py`
-- Логирование выполнения этапов пайплайна в файл `experiments.log`
-- Логирование в консоль для отображения прогресса
-- Структурированное логирование с временными метками
+- Модуль `src/utils/monitoring.py`
+- Логирование в `experiments.log`
+- Структурированные временные метки
 
-### Функциональность
-- Логирование начала и завершения каждого этапа пайплайна
-- Сохранение конфигураций и метрик в лог-файл
-- Настройка мониторинга через конфигурационные файлы
-- Возможность отключения мониторинга через конфигурацию
+### Пример лога
+```
+================================================================================
+Pipeline stage started: train_model
+Timestamp: 2026-01-16T17:41:38.575819+00:00
+Configuration: {'model_type': 'logistic_regression'}
+================================================================================
+Pipeline stage completed: train_model
+Metrics: {'accuracy': 0.594, 'f1_macro': 0.266}
+================================================================================
+```
+
+## Скриншоты
+
+### MLflow Experiments
+![MLflow Experiments](../data/screenshots/experiments.png)
+
+### MLflow Model Registry
+![Model Registry](../data/screenshots/models.png)
+
+### Детали эксперимента
+![Experiment Details](../data/screenshots/experiment_baseline.png)
 
 ## Воспроизводимость
 
-### Требования для воспроизведения
-1. **Установка зависимостей:**
-   ```bash
-   uv sync --frozen
-   ```
+### Быстрый старт
+```bash
+# Установка зависимостей
+uv sync --frozen
 
-2. **Запуск полного пайплайна:**
-   ```bash
-   dvc repro
-   ```
-   Это выполнит все этапы: `prepare_data` → `train_model` → `visualize`
+# Запуск пайплайна
+dvc repro
 
-3. **Запуск конкретного этапа:**
-   ```bash
-   dvc repro prepare_data
-   dvc repro train_model
-   dvc repro visualize
-   ```
+# Принудительный перезапуск
+dvc repro --force
+```
 
-4. **Запуск с разными конфигурациями:**
-   ```bash
-   # С базовой конфигурацией
-   dvc repro train_model
-   
-   # С конфигурацией Random Forest
-   PYTHONPATH=. uv run python src/models/train_model.py \
-     data/processed/wine_processed.csv \
-     models/model.pkl \
-     reports/metrics.json \
-     --config-path conf/config_rf.yaml
-   ```
+### Запуск с разными моделями
+```bash
+# Random Forest
+PYTHONPATH=. uv run python src/models/train_model.py \
+  data/processed/wine_processed.csv models/model.pkl reports/metrics.json \
+  --config-path conf/config_rf.yaml
 
-5. **Просмотр логов мониторинга:**
-   ```bash
-   tail -f experiments.log
-   ```
+# SVM
+PYTHONPATH=. uv run python src/models/train_model.py \
+  data/processed/wine_processed.csv models/model.pkl reports/metrics.json \
+  --config-path conf/config_svm.yaml
+```
 
-### Гарантии воспроизводимости
-- Все зависимости зафиксированы в `pyproject.toml` и `uv.lock`
-- Конфигурации хранятся в версионируемых YAML файлах
-- DVC отслеживает зависимости и параметры для автоматического кэширования
-- Используется фиксированный `random_state=13` для воспроизводимости результатов
-- Все этапы пайплайна логируются в `experiments.log` с временными метками
-- Конфигурации валидируются через OmegaConf
+### Просмотр результатов
+```bash
+# DAG пайплайна
+dvc dag
 
-### Воспроизведение с разными моделями
-Для обучения разных моделей:
-1. Выбрать соответствующую конфигурацию из `conf/`:
-   - `conf/config_logistic.yaml` — Logistic Regression
-   - `conf/config_rf.yaml` — Random Forest
-   - `conf/config_svm.yaml` — SVM
-2. Запустить обучение с выбранной конфигурацией:
-   ```bash
-   PYTHONPATH=. uv run python src/models/train_model.py \
-     data/processed/wine_processed.csv \
-     models/model.pkl \
-     reports/metrics.json \
-     --config-path conf/config_rf.yaml
-   ```
-3. DVC автоматически определит изменения и перезапустит необходимые этапы
+# Метрики
+dvc metrics show
+
+# Логи мониторинга
+tail -20 experiments.log
+```
 
 ## Структура проекта
 
 ```
 conf/
-  ├── config.yaml          # Базовая конфигурация
-  ├── config_logistic.yaml # Конфигурация для Logistic Regression
-  ├── config_rf.yaml       # Конфигурация для Random Forest
-  └── config_svm.yaml      # Конфигурация для SVM
+  ├── config.yaml          # Базовая конфигурация (Hydra)
+  ├── config_logistic.yaml # Logistic Regression
+  ├── config_rf.yaml       # Random Forest (defaults: config)
+  └── config_svm.yaml      # SVM (defaults: config)
 
 src/
   ├── data/
-  │   └── make_dataset.py  # Этап подготовки данных
+  │   ├── make_dataset.py      # prepare_data
+  │   └── compute_statistics.py # compute_statistics
   ├── models/
-  │   └── train_model.py   # Этап обучения модели
+  │   └── train_model.py       # train_model
   ├── visualization/
-  │   └── visualize.py     # Этап визуализации
+  │   └── visualize.py         # visualize
   └── utils/
-      └── monitoring.py     # Система мониторинга
+      ├── config.py            # Hydra compose API
+      └── monitoring.py        # Pipeline monitoring
 
 dvc.yaml                   # Определение пайплайна
-experiments.log            # Лог выполнения пайплайна
+experiments.log            # Лог выполнения
 ```
-
-## Скриншоты
-
-![alt text](<../data/screenshots/image copy 7.png>)

@@ -1,6 +1,6 @@
 stages:
   prepare_data:
-    cmd: PYTHONPATH=. uv run python src/data/make_dataset.py data/raw/WineQT.csv 
+    cmd: PYTHONPATH=. uv run python src/data/make_dataset.py data/raw/WineQT.csv
       data/processed/wine_processed.csv --params-path params.json --config-path conf/config.yaml
     deps:
     - src/data/make_dataset.py
@@ -11,9 +11,15 @@ stages:
       - data
     outs:
     - data/processed/wine_processed.csv
+
+  # These two stages run in PARALLEL after prepare_data:
+  # - train_model: trains the model
+  # - compute_statistics: computes dataset statistics
+  # DVC automatically detects they can run in parallel with: dvc repro --parallel
+
   train_model:
-    cmd: PYTHONPATH=. uv run python src/models/train_model.py 
-      data/processed/wine_processed.csv models/model.pkl reports/metrics.json 
+    cmd: PYTHONPATH=. uv run python src/models/train_model.py
+      data/processed/wine_processed.csv models/model.pkl reports/metrics.json
       --params-path params.json --config-path conf/config.yaml
     deps:
     - data/processed/wine_processed.csv
@@ -27,8 +33,20 @@ stages:
     metrics:
     - reports/metrics.json:
         cache: false
+
+  compute_statistics:
+    cmd: PYTHONPATH=. uv run python src/data/compute_statistics.py
+      data/processed/wine_processed.csv reports/statistics.json
+      --config-path conf/config.yaml
+    deps:
+    - data/processed/wine_processed.csv
+    - src/data/compute_statistics.py
+    - conf/config.yaml
+    outs:
+    - reports/statistics.json
+
   visualize:
-    cmd: PYTHONPATH=. uv run python src/visualization/visualize.py 
+    cmd: PYTHONPATH=. uv run python src/visualization/visualize.py
       reports/metrics.json reports/figures --config-path conf/config.yaml
     deps:
     - reports/metrics.json

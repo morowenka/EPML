@@ -1,10 +1,10 @@
 {
-  "timestamp_utc": "2025-12-12T09:32:22.797090+00:00",
+  "timestamp_utc": "2026-01-16T17:54:07.491438+00:00",
   "mlflow": {
     "tracking_uri": "file:///Users/m.basov/Desktop/ITMO/EPML/mlruns",
-    "experiment_id": "186917437686307325",
-    "run_id": "c78b3895c023494485e898eb8269120d",
-    "run_name": "random-forest-20251212-093220"
+    "experiment_id": "481286999903239353",
+    "run_id": "9a1a4a84ba3846548e4603ac541f5679",
+    "run_name": "random-forest-20260116-175405"
   },
   "model": {
     "type": "RandomForestClassifier",

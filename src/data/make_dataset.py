@@ -1,33 +1,17 @@
-import json
 import logging
 from pathlib import Path
-from typing import Any, cast
 
 import click
 import pandas as pd
 from dotenv import find_dotenv, load_dotenv
-from omegaconf import OmegaConf
 from sklearn.preprocessing import StandardScaler
 
+from src.utils.config import load_config_with_params
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_fmt)
 logger = logging.getLogger(__name__)
-
-
-def _load_params(params_path: Path) -> dict[str, Any]:
-    if not params_path.exists():
-        logger.warning("Params file %s not found. Using defaults.", params_path)
-        return {}
-
-    # Try OmegaConf first (YAML), fallback to JSON
-    if params_path.suffix in (".yaml", ".yml"):
-        cfg = OmegaConf.load(params_path)
-        return OmegaConf.to_container(cfg, resolve=True)
-
-    with params_path.open("r", encoding="utf-8") as fp:
-        return cast(dict[str, Any], json.load(fp))
 
 
 @click.command()
@@ -54,13 +38,14 @@ def main(
     config_path: Path | None,
 ) -> None:
     """Generate the project dataset and prepare processed features."""
-    # Use OmegaConf config if provided, otherwise fallback to params_path
-    if config_path and config_path.exists():
-        cfg = OmegaConf.load(config_path)
-        params = OmegaConf.to_container(cfg, resolve=True)
-        logger.info("Loaded configuration from %s", config_path)
+    # Load configuration using Hydra compose API for proper config composition
+    # This handles 'defaults:' directives and merges configs correctly
+    if config_path:
+        config_name = config_path.stem if config_path.is_file() else "config"
+        config_dir = config_path if config_path.is_dir() else config_path.parent
+        params = load_config_with_params(config_dir, params_path, config_name)
     else:
-        params = _load_params(params_path)
+        params = load_config_with_params(None, params_path)
 
     # Setup monitoring
     monitor = setup_monitoring(config_path)
