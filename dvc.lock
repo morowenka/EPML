@@ -37,7 +37,7 @@ stages:
     params:
       params.json:
         train:
-          random_state: 13
+          random_state: 52
           test_size: 0.2
           model:
             logistic_regression:
@@ -50,9 +50,9 @@ stages:
     outs:
     - path: models/model.pkl
       hash: md5
-      md5: fbe12101cd721a30ac8f47d3b5ea2a5e
+      md5: 0787fee3b2da1bc6a07f3205346b8436
       size: 1663
     - path: reports/metrics.json
       hash: md5
-      md5: 465d6b8896b08014eedf5f06ad4ec447
-      size: 864
+      md5: e457ce9cf63bbe8cff3716a3760928e3
+      size: 894

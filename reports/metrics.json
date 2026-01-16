@@ -1,10 +1,10 @@
 {
-  "timestamp_utc": "2026-01-16T10:13:14.422816+00:00",
+  "timestamp_utc": "2026-01-16T10:43:36.384098+00:00",
   "mlflow": {
     "tracking_uri": "file:///Users/m.basov/Desktop/ITMO/EPML/mlruns",
-    "experiment_id": "269148069767595932",
-    "run_id": "13e6d2def29e41b48970edce30ddbe9f",
-    "run_name": "baseline-20260116-101312"
+    "experiment_id": "481286999903239353",
+    "run_id": "ea26053a540a47989a25eb670e0509ea",
+    "run_name": "baseline-20260116-104334"
   },
   "model": {
     "type": "LogisticRegression",
@@ -32,7 +32,7 @@
     "test_size": 0.2
   },
   "metrics": {
-    "accuracy": 1.0,
-    "f1_macro": 1.0
+    "accuracy": 0.9722222222222222,
+    "f1_macro": 0.9717813051146384
   }
 }
