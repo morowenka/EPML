@@ -1,31 +1,27 @@
 {
-  "timestamp_utc": "2026-01-16T17:54:07.491438+00:00",
+  "timestamp_utc": "2026-01-16T20:32:15.392807+00:00",
   "mlflow": {
     "tracking_uri": "file:///Users/m.basov/Desktop/ITMO/EPML/mlruns",
     "experiment_id": "481286999903239353",
-    "run_id": "9a1a4a84ba3846548e4603ac541f5679",
-    "run_name": "random-forest-20260116-175405"
+    "run_id": "cc4cf5502c4f410ea7f69cb305693526",
+    "run_name": "baseline-20260116-203213"
   },
   "model": {
-    "type": "RandomForestClassifier",
+    "type": "LogisticRegression",
     "params": {
-      "bootstrap": true,
-      "ccp_alpha": 0.0,
+      "C": 1.0,
       "class_weight": null,
-      "criterion": "gini",
-      "max_depth": 10,
-      "max_features": "sqrt",
-      "max_leaf_nodes": null,
-      "max_samples": null,
-      "min_impurity_decrease": 0.0,
-      "min_samples_leaf": 1,
-      "min_samples_split": 2,
-      "min_weight_fraction_leaf": 0.0,
-      "monotonic_cst": null,
-      "n_estimators": 100,
+      "dual": false,
+      "fit_intercept": true,
+      "intercept_scaling": 1,
+      "l1_ratio": null,
+      "max_iter": 500,
+      "multi_class": "deprecated",
       "n_jobs": null,
-      "oob_score": false,
-      "random_state": 13,
+      "penalty": "l2",
+      "random_state": null,
+      "solver": "lbfgs",
+      "tol": 0.0001,
       "verbose": 0,
       "warm_start": false
     }
@@ -36,7 +32,7 @@
     "test_size": 0.2
   },
   "metrics": {
-    "accuracy": 0.62882096069869,
-    "f1_macro": 0.307626011111711
+    "accuracy": 0.5938864628820961,
+    "f1_macro": 0.26560498603051796
   }
 }

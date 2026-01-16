@@ -4,10 +4,10 @@ import json
 import logging
 from pathlib import Path
 
-import click
+import hydra
 import pandas as pd
+from omegaconf import DictConfig
 
-from src.utils.config import load_config_with_params
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -15,32 +15,16 @@ logging.basicConfig(level=logging.INFO, format=log_fmt)
 logger = logging.getLogger(__name__)
 
 
-@click.command()
-@click.argument("processed_dataset_path", type=click.Path(exists=True, path_type=Path))
-@click.argument("output_path", type=click.Path(path_type=Path))
-@click.option(
-    "--config-path",
-    default=None,
-    type=click.Path(exists=False, path_type=Path),
-    help="Path to Hydra/OmegaConf configuration file.",
-)
-def main(
-    processed_dataset_path: Path,
-    output_path: Path,
-    config_path: Path | None,
-) -> None:
+@hydra.main(config_path="../../conf", config_name="config", version_base=None)
+def main(cfg: DictConfig) -> None:
     """Compute and save dataset statistics."""
-    # Load configuration using Hydra compose API
-    if config_path:
-        config_name = config_path.stem if config_path.is_file() else "config"
-        config_dir = config_path if config_path.is_dir() else config_path.parent
-        params = load_config_with_params(config_dir, None, config_name)
-    else:
-        params = load_config_with_params(None, None)
-
     # Setup monitoring
-    monitor = setup_monitoring(config_path)
-    log_pipeline_start(monitor, "compute_statistics", params.get("data", {}))
+    monitor = setup_monitoring()
+    log_pipeline_start(monitor, "compute_statistics", dict(cfg.data))
+
+    # Get paths from config
+    processed_dataset_path = Path(cfg.paths.processed_data)
+    output_path = Path(cfg.paths.statistics)
 
     logger.info("Loading processed dataset from %s", processed_dataset_path)
     df = pd.read_csv(processed_dataset_path)

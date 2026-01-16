@@ -2,11 +2,11 @@ import json
 import logging
 from pathlib import Path
 
-import click
+import hydra
 import matplotlib.pyplot as plt
 import seaborn as sns
+from omegaconf import DictConfig
 
-from src.utils.config import load_config_with_params
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -16,32 +16,20 @@ logger = logging.getLogger(__name__)
 sns.set_style("whitegrid")
 
 
-@click.command()
-@click.argument("metrics_path", type=click.Path(exists=True, path_type=Path))
-@click.argument("output_dir", type=click.Path(path_type=Path))
-@click.option(
-    "--config-path",
-    default=None,
-    type=click.Path(exists=False, path_type=Path),
-    help="Path to Hydra/OmegaConf configuration file.",
-)
-def main(metrics_path: Path, output_dir: Path, config_path: Path | None) -> None:
+@hydra.main(config_path="../../conf", config_name="config", version_base=None)
+def main(cfg: DictConfig) -> None:
     """Generate visualization plots from metrics."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-
     # Setup monitoring
-    monitor = setup_monitoring(config_path)
+    monitor = setup_monitoring()
     log_pipeline_start(monitor, "visualize")
 
-    # Load configuration using Hydra compose API
-    if config_path:
-        config_name = config_path.stem if config_path.is_file() else "config"
-        config_dir = config_path if config_path.is_dir() else config_path.parent
-        params = load_config_with_params(config_dir, None, config_name)
-    else:
-        params = load_config_with_params(None, None)
+    # Get paths from config
+    metrics_path = Path(cfg.paths.metrics)
+    output_dir = Path(cfg.paths.figures)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    enabled = params.get("visualization", {}).get("enabled", True)
+    # Check if visualization enabled
+    enabled = cfg.visualization.enabled
 
     if not enabled:
         logger.info("Visualization disabled in configuration")

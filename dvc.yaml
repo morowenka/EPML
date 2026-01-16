@@ -1,33 +1,33 @@
 stages:
   prepare_data:
-    cmd: PYTHONPATH=. uv run python src/data/make_dataset.py data/raw/WineQT.csv
-      data/processed/wine_processed.csv --params-path params.json --config-path conf/config.yaml
+    cmd: PYTHONPATH=. uv run python src/data/make_dataset.py
     deps:
     - src/data/make_dataset.py
     - data/raw/WineQT.csv
     - conf/config.yaml
     params:
-    - params.json:
+    - conf/config.yaml:
       - data
+      - paths.raw_data
+      - paths.processed_data
     outs:
     - data/processed/wine_processed.csv
 
-  # These two stages run in PARALLEL after prepare_data:
-  # - train_model: trains the model
-  # - compute_statistics: computes dataset statistics
-  # DVC automatically detects they can run in parallel with: dvc repro --parallel
+  # These two stages run in PARALLEL after prepare_data
+  # (independent branches in DAG)
 
   train_model:
     cmd: PYTHONPATH=. uv run python src/models/train_model.py
-      data/processed/wine_processed.csv models/model.pkl reports/metrics.json
-      --params-path params.json --config-path conf/config.yaml
     deps:
     - data/processed/wine_processed.csv
     - src/models/train_model.py
     - conf/config.yaml
     params:
-    - params.json:
+    - conf/config.yaml:
       - train
+      - paths.processed_data
+      - paths.model
+      - paths.metrics
     outs:
     - models/model.pkl
     metrics:
@@ -36,21 +36,28 @@ stages:
 
   compute_statistics:
     cmd: PYTHONPATH=. uv run python src/data/compute_statistics.py
-      data/processed/wine_processed.csv reports/statistics.json
-      --config-path conf/config.yaml
     deps:
     - data/processed/wine_processed.csv
     - src/data/compute_statistics.py
     - conf/config.yaml
+    params:
+    - conf/config.yaml:
+      - data
+      - paths.processed_data
+      - paths.statistics
     outs:
     - reports/statistics.json
 
   visualize:
     cmd: PYTHONPATH=. uv run python src/visualization/visualize.py
-      reports/metrics.json reports/figures --config-path conf/config.yaml
     deps:
     - reports/metrics.json
     - src/visualization/visualize.py
     - conf/config.yaml
+    params:
+    - conf/config.yaml:
+      - visualization
+      - paths.metrics
+      - paths.figures
     outs:
     - reports/figures/metrics_summary.png

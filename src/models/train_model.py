@@ -4,18 +4,18 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-import click
+import hydra
 import joblib
 import mlflow
 import mlflow.sklearn
 import pandas as pd
+from omegaconf import DictConfig
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
-from src.utils.config import load_config_with_params
 from src.utils.monitoring import log_pipeline_end, log_pipeline_start, setup_monitoring
 
 log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -32,12 +32,12 @@ def _build_model(model_params: dict[str, Any]):
         config = {**default_config, **user_config}
         return LogisticRegression(**config)
     elif model_type == "random_forest":
-        default_config: dict[str, Any] = {"n_estimators": 100, "random_state": 13}
+        default_config = {"n_estimators": 100, "random_state": 13}
         user_config = model_params.get("random_forest", {})
         config = {**default_config, **user_config}
         return RandomForestClassifier(**config)
     elif model_type == "svm":
-        default_config: dict[str, Any] = {"C": 1.0, "kernel": "rbf", "random_state": 13}
+        default_config = {"C": 1.0, "kernel": "rbf", "random_state": 13}
         user_config = model_params.get("svm", {})
         config = {**default_config, **user_config}
         return SVC(**config)
@@ -80,54 +80,27 @@ def _log_model_params(model) -> dict[str, Any]:
     return prepared
 
 
-@click.command()
-@click.argument("processed_dataset_path", type=click.Path(exists=True, path_type=Path))
-@click.argument("model_output_path", type=click.Path(path_type=Path))
-@click.argument("metrics_output_path", type=click.Path(path_type=Path))
-@click.option(
-    "--params-path",
-    default="params.json",
-    show_default=True,
-    type=click.Path(exists=False, path_type=Path),
-    help="Path to the parameters file (JSON or YAML) that controls the training procedure.",
-)
-@click.option(
-    "--config-path",
-    default=None,
-    show_default=True,
-    type=click.Path(exists=False, path_type=Path),
-    help="Path to OmegaConf configuration file (YAML). Overrides --params-path if provided.",
-)
-def main(
-    processed_dataset_path: Path,
-    model_output_path: Path,
-    metrics_output_path: Path,
-    params_path: Path,
-    config_path: Path | None,
-) -> None:
+@hydra.main(config_path="../../conf", config_name="config", version_base=None)
+def main(cfg: DictConfig) -> None:
     """Train a simple classification model and persist it."""
-    # Load configuration using Hydra compose API for proper config composition
-    # This handles 'defaults:' directives and merges configs correctly
-    if config_path:
-        config_name = config_path.stem if config_path.is_file() else "config"
-        config_dir = config_path if config_path.is_dir() else config_path.parent
-        params = load_config_with_params(config_dir, params_path, config_name)
-    else:
-        params = load_config_with_params(None, params_path)
-
     # Setup monitoring
-    monitor = setup_monitoring(config_path)
+    monitor = setup_monitoring()
     log_pipeline_start(
         monitor,
         "train_model",
-        {"model_type": params.get("train", {}).get("model", {}).get("type", "unknown")},
+        {"model_type": cfg.train.model.type},
     )
 
-    train_params = params.get("train", {})
+    # Get paths from config
+    processed_dataset_path = Path(cfg.paths.processed_data)
+    model_output_path = Path(cfg.paths.model)
+    metrics_output_path = Path(cfg.paths.metrics)
 
-    random_state = train_params.get("random_state", 13)
-    test_size = train_params.get("test_size", 0.2)
-    model_params = train_params.get("model", {})
+    # Get train params
+    train_params = dict(cfg.train)
+    random_state = cfg.train.random_state
+    test_size = cfg.train.test_size
+    model_params = dict(cfg.train.model)
 
     logger.info("Loading processed dataset from %s", processed_dataset_path)
     df = pd.read_csv(processed_dataset_path)

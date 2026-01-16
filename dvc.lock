@@ -1,57 +1,61 @@
 schema: '2.0'
 stages:
   prepare_data:
-    cmd: PYTHONPATH=. uv run python src/data/make_dataset.py data/raw/WineQT.csv
-      data/processed/wine_processed.csv --params-path params.json --config-path 
-      conf/config.yaml
+    cmd: PYTHONPATH=. uv run python src/data/make_dataset.py
     deps:
     - path: conf/config.yaml
       hash: md5
-      md5: 6f91c1c27caeaa34466bb1b71b8c6935
-      size: 459
+      md5: 54b1e64446c84be5b70fbfdf7c804327
+      size: 1009
     - path: data/raw/WineQT.csv
       hash: md5
       md5: e2e57e4c41e6ee0213fb12e5a70f4bfb
       size: 78057
     - path: src/data/make_dataset.py
       hash: md5
-      md5: 0ef64b453298925bc1a230b60d9f553a
-      size: 3302
+      md5: 41b703dc119c32f472f8eb380e89d11e
+      size: 2158
     params:
-      params.json:
+      conf/config.yaml:
         data:
           feature_scaling: true
+        paths.processed_data: data/processed/wine_processed.csv
+        paths.raw_data: data/raw/WineQT.csv
     outs:
     - path: data/processed/wine_processed.csv
       hash: md5
       md5: be51dff919d2d7d2a5dc1a1cde4395fd
       size: 250585
   train_model:
-    cmd: PYTHONPATH=. uv run python src/models/train_model.py 
-      data/processed/wine_processed.csv models/model.pkl reports/metrics.json 
-      --params-path params.json --config-path conf/config.yaml
+    cmd: PYTHONPATH=. uv run python src/models/train_model.py
     deps:
     - path: conf/config.yaml
       hash: md5
-      md5: 6f91c1c27caeaa34466bb1b71b8c6935
-      size: 459
+      md5: 54b1e64446c84be5b70fbfdf7c804327
+      size: 1009
     - path: data/processed/wine_processed.csv
       hash: md5
       md5: be51dff919d2d7d2a5dc1a1cde4395fd
       size: 250585
     - path: src/models/train_model.py
       hash: md5
-      md5: 3b5bc075996d94a7e026471054cfc074
-      size: 8092
+      md5: 2c6062a49b0dd5651ea4225b74f1e609
+      size: 6912
     params:
-      params.json:
+      conf/config.yaml:
+        paths.metrics: reports/metrics.json
+        paths.model: models/model.pkl
+        paths.processed_data: data/processed/wine_processed.csv
         train:
-          random_state: 52
+          random_state: 13
           test_size: 0.2
           model:
+            type: logistic_regression
             logistic_regression:
               max_iter: 500
-              multi_class: auto
+              C: 1.0
+              penalty: l2
+              solver: lbfgs
           mlflow:
             experiment_name: wine-quality
             run_name_prefix: baseline
@@ -63,46 +67,55 @@ stages:
       size: 1879
     - path: reports/metrics.json
       hash: md5
-      md5: 73cbf79fcbf5639568710c76c85c8226
+      md5: 90884e3687902e8f773154f8a66f1c44
       size: 902
   visualize:
-    cmd: PYTHONPATH=. uv run python src/visualization/visualize.py 
-      reports/metrics.json reports/figures --config-path conf/config.yaml
+    cmd: PYTHONPATH=. uv run python src/visualization/visualize.py
     deps:
     - path: conf/config.yaml
       hash: md5
-      md5: 6f91c1c27caeaa34466bb1b71b8c6935
-      size: 459
+      md5: 54b1e64446c84be5b70fbfdf7c804327
+      size: 1009
     - path: reports/metrics.json
       hash: md5
-      md5: 73cbf79fcbf5639568710c76c85c8226
+      md5: 90884e3687902e8f773154f8a66f1c44
       size: 902
     - path: src/visualization/visualize.py
       hash: md5
-      md5: a84d3eb03d7a32c14a6d0eb732f50a88
-      size: 2663
+      md5: 89816662a642cd2e742115cfdaa31645
+      size: 2101
+    params:
+      conf/config.yaml:
+        paths.figures: reports/figures
+        paths.metrics: reports/metrics.json
+        visualization:
+          enabled: true
     outs:
     - path: reports/figures/metrics_summary.png
       hash: md5
       md5: 0d280ed289f051766c7e4e530d1b5c67
       size: 25177
   compute_statistics:
-    cmd: PYTHONPATH=. uv run python src/data/compute_statistics.py 
-      data/processed/wine_processed.csv reports/statistics.json --config-path 
-      conf/config.yaml
+    cmd: PYTHONPATH=. uv run python src/data/compute_statistics.py
     deps:
     - path: conf/config.yaml
       hash: md5
-      md5: 6f91c1c27caeaa34466bb1b71b8c6935
-      size: 459
+      md5: 54b1e64446c84be5b70fbfdf7c804327
+      size: 1009
     - path: data/processed/wine_processed.csv
       hash: md5
       md5: be51dff919d2d7d2a5dc1a1cde4395fd
       size: 250585
     - path: src/data/compute_statistics.py
       hash: md5
-      md5: 5801c42878bf7e869aa7e9f7a4b08bec
-      size: 3151
+      md5: 6947a9a5a6b1ec75a8da95184d8e2e70
+      size: 2556
+    params:
+      conf/config.yaml:
+        data:
+          feature_scaling: true
+        paths.processed_data: data/processed/wine_processed.csv
+        paths.statistics: reports/statistics.json
     outs:
     - path: reports/statistics.json
       hash: md5
