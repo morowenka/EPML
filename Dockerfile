@@ -28,7 +28,15 @@ COPY . .
 RUN uv sync --frozen
 
 RUN uv tool install dvc==3.59.0
-RUN dvc repro
+
+# Примечание: dvc repro должен выполняться ВНУТРИ контейнера после dvc pull
+# Согласно отчету hw2 (раздел Docker), правильный workflow:
+# 1. docker build -t wine-hw2 .
+# 2. docker run ... wine-hw2 bash
+# 3. Внутри контейнера: uv sync --frozen && dvc pull --remote localremote && dvc repro
+# dvc repro не выполняется во время build, так как:
+# - DVC remote недоступен во время build (только через volume mount при запуске)
+# - MLflow создает mlruns/ во время train_model, что должно происходить в runtime
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
