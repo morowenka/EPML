@@ -120,14 +120,18 @@ Metrics: {'accuracy': 0.594, 'f1_macro': 0.266}
 
 ## Скриншоты
 
+### DVC DAG
+![DVC DAG](../data/screenshots/dag.png)
+
+### DVC Repro
+![DVC Repro 1](../data/screenshots/dvc_repro_1.png)
+![DVC Repro 2](../data/screenshots/dvc_repro_2.png)
+
 ### MLflow Experiments
-![MLflow Experiments](../data/screenshots/experiments.png)
+![MLflow Experiments](../data/screenshots/exp.png)
 
-### MLflow Model Registry
-![Model Registry](../data/screenshots/models.png)
-
-### Детали эксперимента
-![Experiment Details](../data/screenshots/experiment_baseline.png)
+### Hydra Config
+![Hydra Config](../data/screenshots/hydra_conf.png)
 
 ## Воспроизводимость
 
