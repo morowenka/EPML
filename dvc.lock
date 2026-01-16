@@ -6,8 +6,8 @@ stages:
     deps:
     - path: src/data/make_dataset.py
       hash: md5
-      md5: c4edaf40f8d339d812c81e58c900b7de
-      size: 2325
+      md5: 9f02a54620146cd763127fd19f987a21
+      size: 2333
     params:
       params.json:
         data:
@@ -32,12 +32,12 @@ stages:
       size: 45989
     - path: src/models/train_model.py
       hash: md5
-      md5: 0ee1d799dc23ab35b88ff3ffb2fb4a79
-      size: 6110
+      md5: 45ad0eb8dc041fc9aa919665958d61db
+      size: 6443
     params:
       params.json:
         train:
-          random_state: 13
+          random_state: 52
           test_size: 0.2
           model:
             logistic_regression:
@@ -46,12 +46,13 @@ stages:
           mlflow:
             experiment_name: wine-quality
             run_name_prefix: baseline
+            model_name: wine-quality-model
     outs:
     - path: models/model.pkl
       hash: md5
-      md5: fbe12101cd721a30ac8f47d3b5ea2a5e
+      md5: 0787fee3b2da1bc6a07f3205346b8436
       size: 1663
     - path: reports/metrics.json
       hash: md5
-      md5: 1bb9da8558b91d00d468d526e7b0ae61
-      size: 864
+      md5: e457ce9cf63bbe8cff3716a3760928e3
+      size: 894
