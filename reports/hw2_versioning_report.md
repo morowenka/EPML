@@ -1,14 +1,27 @@
 # HW2 — Версионирование данных и моделей
 
+## Быстрый старт (воспроизведение)
+
+```bash
+# 1. Установить зависимости
+uv sync --frozen
+
+# 2. Запустить пайплайн (данные генерируются из sklearn, dvc pull НЕ требуется)
+dvc repro
+
+# 3. Проверить метрики
+dvc metrics show
+```
+
 ## Выбранные инструменты
 - **Версионирование данных:** DVC (Data Version Control) с локальным remote `localremote`
 - **Версионирование моделей:** MLflow (локальный трекинг с полной версией `mlflow`) + DVC stage `train_model` для оркестрации
 
 ## Настройка данных
-1. `dvc init` и локальный remote по умолчанию `/Users/m.basov/Desktop/dvc_storage`
-2. Stage `prepare_data` описан в `dvc.yaml` и пересоздаёт датасет из встроенного `sklearn.datasets.load_wine`
+1. `dvc init` и локальный remote (используется для сохранения артефактов, не требуется для воспроизведения)
+2. Stage `prepare_data` описан в `dvc.yaml` и **генерирует датасет из встроенного `sklearn.datasets.load_wine`** — внешние данные не требуются
 3. Автоматическое управление версиями: `dvc repro prepare_data` пересчитывает артефакты и обновляет `dvc.lock`
-4. Версии данных хранятся в remote и подтягиваются командой `dvc pull`
+4. Версии данных хранятся в remote и подтягиваются командой `dvc pull` (опционально, только для восстановления ранее сохранённых артефактов)
 
 ## Настройка моделей
 1. Stage `train_model` в `dvc.yaml` выполняет `uv run python src/models/train_model.py ...`.
@@ -18,20 +31,16 @@
 5. Версии моделей просматриваются через MLflow UI (см. раздел "Воспроизводимость", пункт 6) либо CLI (`uv run mlflow experiments search --view ACTIVE_ONLY` → `uv run mlflow runs list --experiment-id <ID>`).
 6. Для чистоты репозитория `mlruns/` оставляем неслежемым (можно добавить в `.gitignore` при необходимости).
 
-## Воспроизводимость
-1. Установить системные зависимости (опционально, если требуется сборка пакетов из исходников):
-   - **macOS:** 
-     ```bash
-     brew install cmake
-     ```
-     **Примечание:** Для MLflow UI рекомендуется использовать предкомпилированные wheel-пакеты для `pyarrow` (см. пункт 6), что позволяет избежать необходимости в системных зависимостях Apache Arrow.
-   - **Linux (Debian/Ubuntu):** `sudo apt-get install build-essential cmake libarrow-dev`
-   - **Linux (Fedora/RHEL):** `sudo dnf install gcc gcc-c++ cmake make arrow-devel`
+## Воспроизводимость (детально)
+1. Установить системные зависимости (опционально, только для MLflow UI):
+   - **macOS:** `brew install cmake` (или использовать предкомпилированные wheel-пакеты для `pyarrow`, см. пункт 5)
+   - **Linux (Debian/Ubuntu):** `sudo apt-get install build-essential cmake`
+   - **Linux (Fedora/RHEL):** `sudo dnf install gcc gcc-c++ cmake make`
 2. Установить Python-зависимости: `uv sync --frozen`
-3. Установить DVC (если не стоит в PATH): `uv tool install dvc==3.59.0`
-4. Подтянуть версионированные данные/модели: `dvc pull`
-5. Запустить конвейер и получить новую версию: `dvc repro`
-   - В свежем clone эта команда создаст каталог `mlruns/`, зарегистрирует эксперимент `wine-quality` и добавит новый run в реестр MLflow.
+3. (опционально) Установить DVC если не в PATH: `uv tool install dvc==3.59.0`
+4. Запустить конвейер: `dvc repro`
+   - **Важно:** `dvc pull` НЕ требуется — данные генерируются из `sklearn.datasets.load_wine`
+   - Команда создаст `mlruns/`, зарегистрирует эксперимент `wine-quality` и добавит run в реестр MLflow
 6. Открыть MLflow UI:
    **Запустить MLflow UI:**
    ```bash
@@ -52,21 +61,16 @@
 ### Docker
 ```bash
 docker build -t wine-hw2 .
-docker run --rm -it -p 5000:5000 -v /Users/m.basov/Desktop/dvc_storage:/dvc_storage -e DVC_REMOTE=/dvc_storage wine-hw2 bash
+docker run --rm -it -p 5000:5000 wine-hw2 bash
 ```
 В контейнере:
 ```bash
-uv sync --frozen
-dvc pull --remote localremote
 dvc repro
 dvc metrics show
 ```
 
-Для запуска MLflow UI в контейнере (build-зависимости уже включены в Dockerfile):
+Для запуска MLflow UI в контейнере:
 ```bash
-uv pip install --only-binary=:all: pyarrow
-uv pip install flask==3.1.2 gunicorn==23.0.0 \
-  prometheus-flask-exporter==0.23.2 sqlalchemy==2.0.45 alembic==1.17.2
 uv run mlflow ui --backend-store-uri file://$(pwd)/mlruns --host 0.0.0.0
 ```
 После запуска UI будет доступен по адресу: **http://localhost:5000** (порт проброшен через `-p 5000:5000` при запуске контейнера).
