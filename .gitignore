@@ -107,3 +107,17 @@ data/external/
 AGENTS.md
 CLAUDE.md
 .claude
+
+# Test scripts (temp)
+test_clearml_credentials.py
+test_environment.py
+
+# Generated metrics (tracked by DVC)
+reports/metrics*.json
+reports/statistics.json
+
+# Empty placeholder scripts
+clearml-server-installer.sh
+
+# ClearML setup docs (local only)
+CLEARML_SETUP.md
