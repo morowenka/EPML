@@ -1,10 +1,10 @@
 {
-  "timestamp_utc": "2026-01-16T20:35:44.020638+00:00",
+  "timestamp_utc": "2026-01-16T21:40:31.514059+00:00",
   "mlflow": {
     "tracking_uri": "file:///Users/m.basov/Desktop/ITMO/EPML/mlruns",
     "experiment_id": "481286999903239353",
-    "run_id": "758cae405bd94377b57fd1b41d6f9933",
-    "run_name": "baseline-20260116-203541"
+    "run_id": "c8ff0460f1d14e50a48ac6361a62a5ae",
+    "run_name": "baseline-20260116-214029"
   },
   "model": {
     "type": "LogisticRegression",

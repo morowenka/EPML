@@ -5,16 +5,16 @@ stages:
     deps:
     - path: conf/config.yaml
       hash: md5
-      md5: 54b1e64446c84be5b70fbfdf7c804327
-      size: 1009
+      md5: 3832a4efd6ca981da24f0722fb3faaff
+      size: 1103
     - path: data/raw/WineQT.csv
       hash: md5
       md5: e2e57e4c41e6ee0213fb12e5a70f4bfb
       size: 78057
     - path: src/data/make_dataset.py
       hash: md5
-      md5: 41b703dc119c32f472f8eb380e89d11e
-      size: 2158
+      md5: adc3e52e5a41b4e18e33645a0d7963bc
+      size: 3862
     params:
       conf/config.yaml:
         data:
@@ -31,16 +31,16 @@ stages:
     deps:
     - path: conf/config.yaml
       hash: md5
-      md5: 54b1e64446c84be5b70fbfdf7c804327
-      size: 1009
+      md5: 3832a4efd6ca981da24f0722fb3faaff
+      size: 1103
     - path: data/processed/wine_processed.csv
       hash: md5
       md5: be51dff919d2d7d2a5dc1a1cde4395fd
       size: 250585
     - path: src/models/train_model.py
       hash: md5
-      md5: 2c6062a49b0dd5651ea4225b74f1e609
-      size: 6912
+      md5: 57e785c5886618b42588373a9d4ae8d7
+      size: 9469
     params:
       conf/config.yaml:
         paths.metrics: reports/metrics.json
@@ -60,6 +60,9 @@ stages:
             experiment_name: wine-quality
             run_name_prefix: baseline
             model_name: wine-quality-model
+          clearml:
+            project_name: wine-quality-mlops
+            task_name:
     outs:
     - path: models/model.pkl
       hash: md5
@@ -67,23 +70,23 @@ stages:
       size: 1879
     - path: reports/metrics.json
       hash: md5
-      md5: 90884e3687902e8f773154f8a66f1c44
+      md5: a577335f14fa91dc161928d20a733306
       size: 902
   visualize:
     cmd: PYTHONPATH=. uv run python src/visualization/visualize.py
     deps:
     - path: conf/config.yaml
       hash: md5
-      md5: 54b1e64446c84be5b70fbfdf7c804327
-      size: 1009
+      md5: 3832a4efd6ca981da24f0722fb3faaff
+      size: 1103
     - path: reports/metrics.json
       hash: md5
-      md5: 90884e3687902e8f773154f8a66f1c44
+      md5: a577335f14fa91dc161928d20a733306
       size: 902
     - path: src/visualization/visualize.py
       hash: md5
-      md5: 89816662a642cd2e742115cfdaa31645
-      size: 2101
+      md5: 1080e554944043988067e86cd6321ab8
+      size: 3947
     params:
       conf/config.yaml:
         paths.figures: reports/figures
@@ -93,15 +96,15 @@ stages:
     outs:
     - path: reports/figures/metrics_summary.png
       hash: md5
-      md5: 0d280ed289f051766c7e4e530d1b5c67
-      size: 25177
+      md5: 46832d56c8f9902b735c49b490389a0e
+      size: 25129
   compute_statistics:
     cmd: PYTHONPATH=. uv run python src/data/compute_statistics.py
     deps:
     - path: conf/config.yaml
       hash: md5
-      md5: 54b1e64446c84be5b70fbfdf7c804327
-      size: 1009
+      md5: 3832a4efd6ca981da24f0722fb3faaff
+      size: 1103
     - path: data/processed/wine_processed.csv
       hash: md5
       md5: be51dff919d2d7d2a5dc1a1cde4395fd
