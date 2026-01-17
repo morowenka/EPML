@@ -13,40 +13,26 @@ stages:
     outs:
     - data/processed/wine_processed.csv
 
-  # These two stages run in PARALLEL after prepare_data
-  # (independent branches in DAG)
-
-  train_model:
-    cmd: PYTHONPATH=. uv run python src/models/train_model.py
+  # Parallel stage - runs train_model and compute_statistics in REAL parallel via Make
+  parallel_stages:
+    cmd: make -j2 parallel-stages
     deps:
     - data/processed/wine_processed.csv
     - src/models/train_model.py
+    - src/data/compute_statistics.py
     - conf/config.yaml
+    - Makefile
     params:
     - conf/config.yaml:
       - train
-      - paths.processed_data
-      - paths.model
-      - paths.metrics
+      - data
+      - paths
     outs:
     - models/model.pkl
+    - reports/statistics.json
     metrics:
     - reports/metrics.json:
         cache: false
-
-  compute_statistics:
-    cmd: PYTHONPATH=. uv run python src/data/compute_statistics.py
-    deps:
-    - data/processed/wine_processed.csv
-    - src/data/compute_statistics.py
-    - conf/config.yaml
-    params:
-    - conf/config.yaml:
-      - data
-      - paths.processed_data
-      - paths.statistics
-    outs:
-    - reports/statistics.json
 
   visualize:
     cmd: PYTHONPATH=. uv run python src/visualization/visualize.py
