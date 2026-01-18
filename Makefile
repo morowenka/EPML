@@ -60,4 +60,7 @@ docs-clean:
 	rm -rf docs/_build
 
 docs-serve: docs
-	cd docs/_build/html && python -m http.server 8000
+	@echo "Starting documentation server on http://localhost:8000"
+	@echo "Press Ctrl+C to stop the server"
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	@cd docs/_build/html && $(UV) run python -m http.server 8000
