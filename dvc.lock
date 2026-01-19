@@ -13,8 +13,8 @@ stages:
       size: 78057
     - path: src/data/make_dataset.py
       hash: md5
-      md5: adc3e52e5a41b4e18e33645a0d7963bc
-      size: 3862
+      md5: 5dd4fd986a719d77ba9065258f8ed09b
+      size: 5001
     params:
       conf/config.yaml:
         data:
@@ -39,8 +39,8 @@ stages:
       size: 250585
     - path: src/models/train_model.py
       hash: md5
-      md5: 57e785c5886618b42588373a9d4ae8d7
-      size: 9469
+      md5: dfe61af7a25931023191fa85d3b7cd40
+      size: 10782
     params:
       conf/config.yaml:
         paths.metrics: reports/metrics.json
@@ -70,7 +70,7 @@ stages:
       size: 1879
     - path: reports/metrics.json
       hash: md5
-      md5: a577335f14fa91dc161928d20a733306
+      md5: 13e691860c5b12a7d4dc586efe521818
       size: 902
   visualize:
     cmd: PYTHONPATH=. uv run python src/visualization/visualize.py
@@ -81,12 +81,12 @@ stages:
       size: 1103
     - path: reports/metrics.json
       hash: md5
-      md5: a577335f14fa91dc161928d20a733306
+      md5: 13e691860c5b12a7d4dc586efe521818
       size: 902
     - path: src/visualization/visualize.py
       hash: md5
-      md5: 1080e554944043988067e86cd6321ab8
-      size: 3947
+      md5: a2a1e019ba7f6dae73dade42143dc60a
+      size: 4983
     params:
       conf/config.yaml:
         paths.figures: reports/figures

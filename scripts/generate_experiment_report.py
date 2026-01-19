@@ -228,8 +228,16 @@ def generate_markdown_report(
     report_lines.extend([
         "## Визуализации",
         "",
-        "![Metrics by Model Type](figures/metrics_by_model_type.png)",
-        "",
+    ])
+
+    # Добавить ссылку на график метрик по типам моделей, только если он был сгенерирован
+    if model_type_col:
+        report_lines.extend([
+            "![Metrics by Model Type](figures/metrics_by_model_type.png)",
+            "",
+        ])
+
+    report_lines.extend([
         "![Metrics Distribution](figures/metrics_distribution.png)",
         "",
         "![Top Models](figures/top_models.png)",

@@ -18,7 +18,7 @@ PYTHONPATH=. uv run python scripts/generate_experiment_report.py \
 - `experiment_report.md` - Markdown отчет с анализом экспериментов
 - `experiment_results.csv` - Сравнительная таблица всех экспериментов
 - `figures/` - Графики и визуализации:
-  - `metrics_by_model_type.png` - Сравнение метрик по типам моделей
+  - `metrics_by_model_type.png` - Сравнение метрик по типам моделей (генерируется только если в экспериментах есть параметр model_type)
   - `metrics_distribution.png` - Распределение метрик
   - `top_models.png` - Топ модели по метрикам
 
