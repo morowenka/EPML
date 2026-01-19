@@ -154,7 +154,7 @@ docker run --rm -it --env-file .env -v "$(pwd)/data:/app/data" wine-quality uv r
 
 ![image.png](../data/screenshots/image.png)
 
-![image copy.png](../data/screenshots/image%20copy.png)
+![image copy.png](../data/screenshots/image_copy.png)
 
-![image copy 2.png](../data/screenshots/image%20copy%202.png)
+![image copy 2.png](../data/screenshots/image_copy_2.png)
 
