@@ -71,6 +71,6 @@ params.json (конфигурация)
 
 ## Скриншоты
 
-![MLflow Experiments](../data/screenshots/experiments.png)
-![MLflow Experiment Baseline](../data/screenshots/experiment_baseline.png)
-![MLflow Models](../data/screenshots/models.png)
+![MLflow Experiments](../_static/screenshots/experiments.png)
+![MLflow Experiment Baseline](../_static/screenshots/experiment_baseline.png)
+![MLflow Models](../_static/screenshots/models.png)

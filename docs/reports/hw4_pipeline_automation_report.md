@@ -98,7 +98,7 @@ stages:
 3. **train_model** — обучение модели (параллельно с compute_statistics)
 4. **visualize** — визуализация метрик (после train_model)
 
-![DVC DAG](../data/screenshots/dag.png)
+![DVC DAG](../_static/screenshots/dag.png)
 
 ---
 
@@ -182,7 +182,7 @@ train:
 - `config_svm.yaml` — SVM
 - `config_logistic.yaml` — Logistic Regression (явный)
 
-![Hydra Config (config_rf.yaml)](../data/screenshots/hydra_conf.png)
+![Hydra Config (config_rf.yaml)](../_static/screenshots/hydra_conf.png)
 
 ### 2.4 CLI overrides
 
@@ -225,7 +225,7 @@ PYTHONPATH=. uv run python src/models/train_model.py --config-name=config_rf tra
 ================================================================================
 ```
 
-![Лог мониторинга (experiments.log)](../data/screenshots/exp.png)
+![Лог мониторинга (experiments.log)](../_static/screenshots/exp.png)
 
 ### 3.3 Тестирование воспроизводимости
 
@@ -240,9 +240,9 @@ dvc repro
 
 **Скриншоты выполнения `dvc repro`:**
 
-![DVC Repro — этапы prepare_data и train_model](../data/screenshots/dvc_repro_1.png)
+![DVC Repro — этапы prepare_data и train_model](../_static/screenshots/dvc_repro_1.png)
 
-![DVC Repro — этапы compute_statistics и visualize](../data/screenshots/dvc_repro_2.png)
+![DVC Repro — этапы compute_statistics и visualize](../_static/screenshots/dvc_repro_2.png)
 
 ### 3.4 Проверка метрик
 
