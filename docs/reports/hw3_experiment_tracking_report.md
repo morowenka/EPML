@@ -26,10 +26,10 @@ MLflow UI: http://127.0.0.1:5000
 ## Скриншоты
 
 ### Список экспериментов
-![experiments](../data/screenshots/experiments.png)
+![experiments](../_static/screenshots/experiments.png)
 
 ### Детали эксперимента
-![experiment_baseline](../data/screenshots/experiment_baseline.png)
+![experiment_baseline](../_static/screenshots/experiment_baseline.png)
 
 ### Model Registry
-![models](../data/screenshots/models.png)
+![models](../_static/screenshots/models.png)

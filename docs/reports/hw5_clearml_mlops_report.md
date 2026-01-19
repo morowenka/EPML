@@ -245,15 +245,15 @@ PYTHONPATH=. uv run python src/pipelines/clearml_pipeline.py --local --model-typ
 
 ### ClearML Pipeline
 
-![ClearML Pipeline](../data/screenshots/pipeline.png)
+![ClearML Pipeline](../_static/screenshots/pipeline.png)
 *Визуализация ClearML Pipeline*
 
 ### ClearML Model Registry
 
-![ClearML Model](../data/screenshots/model_clearml.png)
+![ClearML Model](../_static/screenshots/model_clearml.png)
 *Модель в ClearML Model Registry*
 
-![ClearML Model Card](../data/screenshots/model_card_clearml.png)
+![ClearML Model Card](../_static/screenshots/model_card_clearml.png)
 *Карточка модели с метаданными*
 
 ## Заключение

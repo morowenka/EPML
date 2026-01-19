@@ -130,6 +130,11 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+# Add any extra paths that contain custom files (such as images) here,
+# relative to this directory. They are copied to the root of the HTML output.
+# html_extra_path is commented out because we use _images for screenshots
+# html_extra_path = ["data"]
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'

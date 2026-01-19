@@ -152,9 +152,9 @@ docker run --rm -it --env-file .env -v "$(pwd)/data:/app/data" wine-quality uv r
 
 Ниже приведены фактические скриншоты настройки, хранящиеся в `data/screenshots/`.
 
-![image.png](../data/screenshots/image.png)
+![image.png](../_static/screenshots/image.png)
 
-![image copy.png](../data/screenshots/image_copy.png)
+![image copy.png](../_static/screenshots/image_copy.png)
 
-![image copy 2.png](../data/screenshots/image_copy_2.png)
+![image copy 2.png](../_static/screenshots/image_copy_2.png)
 
